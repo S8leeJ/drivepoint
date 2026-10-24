@@ -4,6 +4,8 @@ A small browser driving scene for a Toyota Financial Services customer decision.
 
 Slow down at Home, the Dealer, or Service. Each stop explains that option with the payment, the total, and the assumptions. The brighter ring is the recommended next step. The numbers come from plain rules on synthetic data, with no API key.
 
+Four more stops sit on the same loop. Drive into the ring and choose Open, or use Financing, Timeline, Explore, and Compare. Those buttons drive the car along the road, and Skip travel opens the same screen. Financing, the ownership timeline, and compare all use one illustrative loan schedule. The interest field is a nominal annual rate, not an APR.
+
 ## Demo
 
 Pick a person in the top left, then slow down inside a ring.
@@ -35,7 +37,7 @@ Click or press a key once so the browser will play the engine.
 
 All models are CC0.
 
-- Car, wheels: [Kenney Car Kit](https://kenney.nl/assets/car-kit)
+- Hatchback, sedan, SUV, and wheels: [Kenney Car Kit](https://kenney.nl/assets/car-kit) (CC0). License text is in `public/models/car/License.txt`.
 - Trees, rocks, bushes: [Kenney Nature Kit](https://kenney.nl/assets/nature-kit)
 - Houses: [Kenney City Kit Suburban](https://kenney.nl/assets/city-kit-suburban)
 - Reflections: [Poly Haven — Kiara 1 Dawn](https://polyhaven.com/a/kiara_1_dawn)

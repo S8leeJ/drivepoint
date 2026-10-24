@@ -5,7 +5,8 @@ import { Physics } from '@react-three/rapier'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { ACESFilmicToneMapping } from 'three'
 import { engine } from './audio/engine.ts'
-import { Car } from './car/Car.tsx'
+import { DriveCar } from './car/Car.tsx'
+import { bindSessionControls, watchPreferences } from './experience/session.ts'
 import { Sun } from './car/Sun.tsx'
 import { customerById, type Customer } from './finance/customers.ts'
 import { recommend } from './finance/recommend.ts'
@@ -13,6 +14,9 @@ import { attachDriveInput } from './input/controls.ts'
 import { Hud } from './ui/Hud.tsx'
 import { StopMarkers } from './world/StopMarkers.tsx'
 import { Valley } from './world/Valley.tsx'
+import { FeatureSites } from './world/FeatureSites.tsx'
+
+bindSessionControls()
 
 function Loader() {
   const { active, progress } = useProgress()
@@ -32,6 +36,7 @@ export default function App() {
   const customer = customerById(customerId)
   const recommendation = useMemo(() => recommend(customer), [customer])
   useEffect(() => attachDriveInput(window), [])
+  useEffect(() => watchPreferences(window), [])
   useEffect(() => {
     const start = () => engine.ensure()
     window.addEventListener('pointerdown', start)
@@ -72,9 +77,10 @@ export default function App() {
           />
           <Physics gravity={[0, -9.81, 0]} timeStep={1 / 60}>
             <Valley />
-            <Car />
+            <DriveCar />
           </Physics>
           <StopMarkers recommended={recommendation.winnerStop} />
+          <FeatureSites />
           <EffectComposer multisampling={0}>
             <SMAA />
             <Bloom mipmapBlur intensity={0.28} luminanceThreshold={0.9} luminanceSmoothing={0.18} />

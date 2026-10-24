@@ -2,6 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useRapier } from '@react-three/rapier'
 import { useRef, type RefObject } from 'react'
 import { Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three'
+import { session } from '../experience/session.ts'
 import { cameraSnap, focusPoint, telemetry } from '../input/controls.ts'
 
 const desired = new Vector3()
@@ -19,10 +20,20 @@ type ChaseCameraProps = {
 export function ChaseCamera({ target }: ChaseCameraProps) {
   const { camera } = useThree()
   const { world, rapier } = useRapier()
-  const smoothed = useRef(new Vector3(-12, 9, -42))
-  const look = useRef(new Vector3(0, 7, -42))
+  const smoothed = useRef(camera.position.clone())
+  const look = useRef(new Vector3())
+  const seeded = useRef(false)
+  const active = useRef(false)
 
   useFrame((_, delta) => {
+    if (session.camera !== 'chase') {
+      active.current = false
+      return
+    }
+    if (!active.current) {
+      cameraSnap.current = true
+      active.current = true
+    }
     const object = target.current
     if (!object) return
     const view = camera as PerspectiveCamera
@@ -51,6 +62,10 @@ export function ChaseCamera({ target }: ChaseCameraProps) {
       }
     }
 
+    if (!seeded.current) {
+      look.current.copy(lookAt)
+      seeded.current = true
+    }
     const snap = cameraSnap.current
     if (snap) {
       cameraSnap.current = false

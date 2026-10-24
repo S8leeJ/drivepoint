@@ -1,9 +1,13 @@
 import type { DynamicRayCastVehicleController } from '@dimforge/rapier3d-compat'
 import { useRapier, type RapierRigidBody } from '@react-three/rapier'
 import { useEffect, useRef, type RefObject } from 'react'
-import { CONNECTION_Y, REST_LENGTH, WHEEL_RADIUS, WHEELS } from './spec.ts'
+import type { WheelLayout } from '../finance/vehicles.ts'
+import { CONNECTION_Y, REST_LENGTH, WHEEL_RADIUS } from './spec.ts'
 
-export function useVehicleController(chassisRef: RefObject<RapierRigidBody | null>) {
+export function useVehicleController(
+  chassisRef: RefObject<RapierRigidBody | null>,
+  wheels: readonly WheelLayout[],
+) {
   const { world } = useRapier()
   const vehicleRef = useRef<DynamicRayCastVehicleController | null>(null)
 
@@ -17,7 +21,7 @@ export function useVehicleController(chassisRef: RefObject<RapierRigidBody | nul
 
     const direction = { x: 0, y: -1, z: 0 }
     const axle = { x: 1, y: 0, z: 0 }
-    WHEELS.forEach((wheel, index) => {
+    wheels.forEach((wheel, index) => {
       vehicle.addWheel(
         { x: wheel.x, y: CONNECTION_Y, z: wheel.z },
         direction,
@@ -39,7 +43,7 @@ export function useVehicleController(chassisRef: RefObject<RapierRigidBody | nul
       vehicleRef.current = null
       world.removeVehicleController(vehicle)
     }
-  }, [chassisRef, world])
+  }, [chassisRef, world, wheels])
 
   return vehicleRef
 }

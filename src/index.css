@@ -23,7 +23,7 @@ canvas { display: block; touch-action: none; }
   pointer-events: none;
 }
 
-.title-block, .mute, .speed, .hint, .touch, .next-move { pointer-events: auto; }
+.title-block, .mute, .speed, .hint, .touch, .next-move, .feature-panel, .travel-card, .arrival-card { pointer-events: auto; }
 
 .title-block {
   position: absolute;
@@ -132,6 +132,9 @@ h1 {
 .hint.beacon {
   bottom: 72px;
   background: rgba(28, 22, 16, 0.72);
+  white-space: normal;
+  text-align: center;
+  max-width: min(440px, calc(100% - 32px));
 }
 
 .next-move {
@@ -311,4 +314,200 @@ h1 {
   .speed { bottom: 118px; }
   h1 { font-size: 26px; }
   .speed strong { font-size: 48px; }
+  .travel-card, .arrival-card { bottom: 196px; }
+}
+
+.feature-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.feature-panel, .travel-card, .arrival-card {
+  color: #f6edd9;
+  background: rgba(22, 18, 14, 0.86);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(246, 237, 217, 0.14);
+}
+
+.compare-panel { width: min(680px, calc(100vw - 44px)); }
+
+.feature-panel {
+  position: absolute;
+  top: 86px;
+  right: 22px;
+  width: min(400px, calc(100vw - 44px));
+  max-height: calc(100% - 108px);
+  overflow: auto;
+  padding: 16px 16px 18px;
+  border-radius: 22px;
+}
+
+.feature-panel h2, .travel-card h2, .arrival-card h2, .scenario-card h3 {
+  margin: 0;
+  font-family: Fraunces, Georgia, serif;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+}
+
+.feature-panel h2 { font-size: 28px; }
+.scenario-card h3 { font-size: 22px; }
+
+.panel-head, .panel-actions, .choice-row, .milestones, .swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.panel-head { justify-content: space-between; margin-bottom: 8px; }
+.panel-actions { margin-top: 10px; }
+.panel-actions .cta, .panel-actions .ghost { width: auto; flex: 1; }
+
+.fine, .feature-panel p, .travel-card p, .arrival-card p, .scenario-card p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.fine { opacity: 0.75; font-size: 12px; }
+
+.payment {
+  margin: 4px 0 8px;
+  font-family: Fraunces, Georgia, serif;
+  font-size: 44px;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+.payment span, .payment.small span {
+  margin-left: 6px;
+  font-family: Outfit, sans-serif;
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+.payment.small { font-size: 30px; }
+
+.text-button, .ghost {
+  border: 0;
+  background: transparent;
+  color: #f6edd9;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ghost, .text-button {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(246, 237, 217, 0.1);
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.field input[type='range'] { grid-column: 1 / -1; width: 100%; accent-color: #ffb703; }
+.field em { grid-column: 1 / -1; font-style: normal; opacity: 0.7; }
+.field strong { font-variant-numeric: tabular-nums; }
+
+.field input[type='number'] {
+  width: 112px;
+  border: 0;
+  border-radius: 10px;
+  padding: 6px 8px;
+  background: rgba(246, 237, 217, 0.12);
+  color: #f6edd9;
+  font: inherit;
+  text-align: right;
+}
+
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.feature-panel details { margin: 4px 0 10px; }
+.feature-panel summary { cursor: pointer; margin-bottom: 8px; }
+
+.travel-card, .arrival-card {
+  position: absolute;
+  left: 50%;
+  bottom: 78px;
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 32px));
+  padding: 12px 14px 14px;
+  border-radius: 18px;
+}
+
+.travel-track {
+  height: 4px;
+  margin: 0 0 10px;
+  border-radius: 999px;
+  background: rgba(246, 237, 217, 0.2);
+  overflow: hidden;
+}
+
+.travel-track span {
+  display: block;
+  height: 100%;
+  background: #ffb703;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.swatch.on { border-color: #f6edd9; }
+
+.compare-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.compare-board.stacked, .compare-panel .compare-board {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 801px) {
+  .compare-panel .compare-board:not(.stacked) { grid-template-columns: 1fr 1fr; }
+}
+
+.scenario-card {
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(246, 237, 217, 0.06);
+}
+
+.delta { color: #ffd27a; }
+
+.hud.driving-locked .touch { display: none; }
+.hud.driving-locked .hint { display: none; }
+
+@media (max-width: 800px) {
+  .feature-panel, .compare-panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-height: 46vh;
+    border-radius: 22px 22px 0 0;
+  }
+  .hud.driving-locked .speed { bottom: calc(46vh + 12px); }
+  .compare-panel .compare-board { grid-template-columns: 1fr; }
 }
