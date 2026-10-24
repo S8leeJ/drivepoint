@@ -2,13 +2,16 @@ import { Environment, Sky, useProgress } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, SMAA, Vignette } from '@react-three/postprocessing'
 import { Physics } from '@react-three/rapier'
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { ACESFilmicToneMapping } from 'three'
 import { engine } from './audio/engine.ts'
 import { Car } from './car/Car.tsx'
 import { Sun } from './car/Sun.tsx'
+import { customerById, type Customer } from './finance/customers.ts'
+import { recommend } from './finance/recommend.ts'
 import { attachDriveInput } from './input/controls.ts'
 import { Hud } from './ui/Hud.tsx'
+import { StopMarkers } from './world/StopMarkers.tsx'
 import { Valley } from './world/Valley.tsx'
 
 function Loader() {
@@ -25,6 +28,9 @@ function Loader() {
 }
 
 export default function App() {
+  const [customerId, setCustomerId] = useState<Customer['id']>('maya')
+  const customer = customerById(customerId)
+  const recommendation = useMemo(() => recommend(customer), [customer])
   useEffect(() => attachDriveInput(window), [])
   useEffect(() => {
     const start = () => engine.ensure()
@@ -68,6 +74,7 @@ export default function App() {
             <Valley />
             <Car />
           </Physics>
+          <StopMarkers recommended={recommendation.winnerStop} />
           <EffectComposer multisampling={0}>
             <SMAA />
             <Bloom mipmapBlur intensity={0.28} luminanceThreshold={0.9} luminanceSmoothing={0.18} />
@@ -76,7 +83,7 @@ export default function App() {
         </Suspense>
       </Canvas>
       <Loader />
-      <Hud />
+      <Hud customer={customer} recommendation={recommendation} onCustomer={setCustomerId} />
     </div>
   )
 }

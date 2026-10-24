@@ -1,6 +1,15 @@
-# Golden Valley
+# What's Your Next Move?
 
-A small browser driving scene. A racing-green hatchback with suspension you can feel, on a looping valley road at golden hour. Drive the asphalt, cut across the grass, or splash into the lake and get set back on the road.
+A small browser driving scene for a Toyota Financial Services customer decision. A racing-green hatchback with suspension you can feel, on a looping valley road at golden hour. Drive the asphalt, cut across the grass, or splash into the lake and get set back on the road.
+
+Slow down at Home, the Dealer, or Service. Each stop explains that option with the payment, the total, and the assumptions. The brighter ring is the recommended next step. The numbers come from plain rules on synthetic data, with no API key.
+
+## Demo
+
+Pick a person in the top left, then slow down inside a ring.
+
+- Maya Chen is on a 2023 RAV4 Hybrid lease and is over her miles. Her next move is the dealer buyout. Drive to the Dealer ring on the east straight and request the quote.
+- Jordan Hale is on a 2021 Camry loan at 3.9%. Refinancing and trading in cost more than staying. His next move is the 60,000-mile service. Switch to Jordan and drive to the Service ring on the north straight.
 
 ## Run
 

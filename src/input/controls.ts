@@ -19,6 +19,8 @@ export const telemetry = {
   lateral: 0,
   gear: 'N' as Gear,
   throttle: false,
+  x: 0,
+  z: 0,
 }
 
 export const focusPoint = new Vector3(0, 6, -42)
