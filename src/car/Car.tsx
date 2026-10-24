@@ -135,10 +135,15 @@ export function Car() {
   const brakeGlow = useRef<PointLight>(null)
   const upside = useRef(0)
   const braking = useRef(false)
-  const tailLight = useMemo(
-    () => new MeshStandardMaterial({ color: '#4a1410', emissive: '#ff2c1c', emissiveIntensity: 0.4 }),
-    [],
-  )
+  const tailLight = useMemo(() => {
+    const material = new MeshStandardMaterial({
+      color: '#2a0908',
+      emissive: '#ff2a1a',
+      emissiveIntensity: 0.05,
+    })
+    material.toneMapped = false
+    return material
+  }, [])
 
   useLayoutEffect(() => {
     wheelObjects.current = parts.wheels
@@ -188,9 +193,11 @@ export function Car() {
     vehicle.setWheelSteering(0, steer)
     vehicle.setWheelSteering(1, steer)
 
+    // Rapier applies engine force along ground-normal × axle, which is local -Z.
+    // The car's nose is +Z, so forward throttle has to be negative.
     let force = 0
-    if (drive.forward) force = ENGINE_FORCE * Math.max(0, 1 - speed / TOP_SPEED)
-    else if (drive.back && speed <= 1.4) force = -ENGINE_FORCE * 0.62 * Math.max(0, 1 - Math.abs(Math.min(speed, 0)) / REVERSE_SPEED)
+    if (drive.forward) force = -ENGINE_FORCE * Math.max(0, 1 - Math.max(speed, 0) / TOP_SPEED)
+    else if (drive.back && speed <= 1.4) force = ENGINE_FORCE * 0.62 * Math.max(0, 1 - Math.max(-speed, 0) / REVERSE_SPEED)
 
     let brake = 0
     if (drive.back && speed > 1.3) brake = BRAKE_FORCE
@@ -234,8 +241,8 @@ export function Car() {
       wheel.quaternion.multiplyQuaternions(steerQuat, spinQuat)
     }
 
-    tailLight.emissiveIntensity = braking.current ? 3.6 : 0.4
-    if (brakeGlow.current) brakeGlow.current.intensity = braking.current ? 4.5 : 0.25
+    tailLight.emissiveIntensity = braking.current ? 6 : 0.08
+    if (brakeGlow.current) brakeGlow.current.intensity = braking.current ? 5 : 0
     engine.update(speed, telemetry.throttle, drive.muted)
   })
 
@@ -271,15 +278,15 @@ export function Car() {
             <boxGeometry args={[0.16, 0.07, 0.035]} />
             <meshStandardMaterial color="#fff4d4" emissive="#fff1c4" emissiveIntensity={2.4} />
           </mesh>
-          <mesh position={[0.46, 0.58, -1.4]} material={tailLight}>
-            <boxGeometry args={[0.2, 0.075, 0.04]} />
+          <mesh position={[0.42, 0.62, -1.48]} material={tailLight}>
+            <boxGeometry args={[0.26, 0.09, 0.04]} />
           </mesh>
-          <mesh position={[-0.46, 0.58, -1.4]} material={tailLight}>
-            <boxGeometry args={[0.2, 0.075, 0.04]} />
+          <mesh position={[-0.42, 0.62, -1.48]} material={tailLight}>
+            <boxGeometry args={[0.26, 0.09, 0.04]} />
           </mesh>
           <pointLight position={[0.32, 0.58, 1.45]} color="#fff1cc" intensity={1.8} distance={14} decay={2} />
           <pointLight position={[-0.32, 0.58, 1.45]} color="#fff1cc" intensity={1.8} distance={14} decay={2} />
-          <pointLight ref={brakeGlow} position={[0, 0.55, -1.55]} color="#ff3b2a" distance={4.5} intensity={0.25} />
+          <pointLight ref={brakeGlow} position={[0, 0.62, -1.7]} color="#ff3b2a" distance={7} decay={2} intensity={0} />
         </group>
       </RigidBody>
       <ChaseCamera target={visual} />
