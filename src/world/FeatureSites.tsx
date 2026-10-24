@@ -66,26 +66,30 @@ function Pavilion() {
   const yaw = Math.atan2(-site.frame.rightX, -site.frame.rightZ)
   return (
     <group position={[site.x, site.y, site.z]} rotation={[0, yaw, 0]}>
-      <mesh position={[0, 0.06, 0]} receiveShadow>
-        <boxGeometry args={[7.2, 0.12, 4.6]} />
-        <meshStandardMaterial color="#d9d0c2" roughness={0.86} />
+      <mesh position={[0, 0.1, 0]} receiveShadow>
+        <boxGeometry args={[10.4, 0.2, 6.7]} />
+        <meshStandardMaterial color="#e6c797" roughness={0.78} />
       </mesh>
-      {[[-3, -1.8], [3, -1.8], [-3, 1.8], [3, 1.8]].map(([x, z]) => (
-        <mesh key={`${x}-${z}`} position={[x, 1.5, z]} castShadow>
-          <boxGeometry args={[0.22, 2.8, 0.22]} />
-          <meshStandardMaterial color="#b98356" roughness={0.7} />
+      {[[-4.5, -2.8], [4.5, -2.8], [-4.5, 2.8], [4.5, 2.8]].map(([x, z]) => (
+        <mesh key={`${x}-${z}`} position={[x, 2, z]} castShadow>
+          <boxGeometry args={[0.23, 3.8, 0.23]} />
+          <meshStandardMaterial color="#a66a3e" roughness={0.7} />
         </mesh>
       ))}
-      <mesh position={[0, 2.95, 0]} castShadow>
-        <boxGeometry args={[7.8, 0.16, 5.2]} />
-        <meshStandardMaterial color="#6d4a34" roughness={0.62} />
+      <mesh position={[0, 4.03, 0]} castShadow>
+        <boxGeometry args={[11.5, 0.25, 7.6]} />
+        <meshStandardMaterial color="#805331" roughness={0.59} />
       </mesh>
-      <mesh position={[0, 1.4, -2.15]}>
-        <boxGeometry args={[5.4, 1.7, 0.08]} />
-        <meshStandardMaterial color="#9fd8c2" emissive="#6fbfa4" emissiveIntensity={0.35} roughness={0.18} metalness={0.04} />
+      <mesh position={[0, 2, -3.1]}>
+        <boxGeometry args={[8.5, 3.5, 0.08]} />
+        <meshPhysicalMaterial color="#6aaf9e" transparent opacity={0.58} roughness={0.14} metalness={0.1} clearcoat={0.8} />
       </mesh>
-      <pointLight position={[0, 2.4, 0.2]} color="#ffd7a1" intensity={4} distance={12} decay={2} />
-      <PlaceLabel text="Financing" position={[0, 4.1, 0]} />
+      <mesh position={[0, 0.25, 3.5]} receiveShadow>
+        <boxGeometry args={[8.3, 0.15, 1.5]} />
+        <meshStandardMaterial color="#edc294" roughness={0.8} />
+      </mesh>
+      <pointLight position={[0, 3.4, 0.2]} color="#ffd7a1" intensity={5} distance={16} decay={2} />
+      <PlaceLabel text="Cost Studio" position={[0, 5.1, 0]} />
     </group>
   )
 }

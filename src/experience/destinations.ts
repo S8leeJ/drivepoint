@@ -18,7 +18,7 @@ export const FEATURE_OPEN_SPEED_KMH = 12
 export const BODY_CLEARANCE = 0.1
 
 export const FEATURES: Record<FeatureId, FeatureSite> = {
-  financing: { id: 'financing', label: 'Financing', place: 'Financing pavilion', distance: 122, lateral: 2.4 },
+  financing: { id: 'financing', label: 'Financing', place: 'Financing pavilion', distance: 140, lateral: 2.4 },
   timeline: { id: 'timeline', label: 'Timeline', place: 'Ownership road', distance: TIMELINE_START, lateral: 0 },
   explore: { id: 'explore', label: 'Explore', place: 'Showroom', distance: 296, lateral: 4.6 },
   compare: { id: 'compare', label: 'Compare', place: 'Comparison bays', distance: 32, lateral: 0 },

@@ -12,7 +12,7 @@ const STRAIGHT_Z = (HALF_Z - RADIUS) * 2
 const CORNER = (Math.PI / 2) * RADIUS
 export const LOOP_LENGTH = STRAIGHT_X * 2 + STRAIGHT_Z * 2 + CORNER * 4
 
-const LAKE = { x: 8, z: 4, rx: 17, rz: 12 }
+const LAKE = { x: 25, z: 1, rx: 38, rz: 33 }
 
 export type RoadFrame = {
   x: number
@@ -168,7 +168,7 @@ export function frameAt(distance: number): RoadFrame {
 
 export function sampleHeight(x: number, z: number) {
   const radial = Math.hypot(x, z)
-  const rim = smoothstep(104, 124, radial) ** 1.1 * 36
+  const rim = smoothstep(104, 124, radial) ** 1.1 * 15
   const hills =
     Math.sin(x * 0.041) * Math.cos(z * 0.037) * 1.65 +
     Math.sin(x * 0.017 + 0.7) * Math.sin(z * 0.02) * 1.9 +
@@ -185,15 +185,15 @@ export function sampleHeight(x: number, z: number) {
   const lz = (z - LAKE.z) / LAKE.rz
   const ellipse = lx * lx + lz * lz
   if (ellipse < 1 && near.distance > 10) {
-    const influence = 1 - smoothstep(0.62, 1, ellipse)
-    const bed = 2.15 - (1 - ellipse) * 6.3
+    const influence = 1 - smoothstep(0.8, 1.06, ellipse)
+    const bed = 1.8 - (1 - ellipse) * 4.4
     y = y * (1 - influence) + bed * influence
   }
   return y
 }
 
 export function getSpawn() {
-  const frame = frameAt(STRAIGHT_X / 2)
+  const frame = frameAt(117)
   return {
     position: [frame.x, sampleHeight(frame.x, frame.z) + 0.6, frame.z] as [number, number, number],
     yaw: Math.atan2(frame.tx, frame.tz),
@@ -251,12 +251,12 @@ function scatter(
 export function createScenery() {
   const random = hash(11)
   return {
-    pines: scatter(random, 78, 4.4, 6.8, 8),
-    oaks: scatter(random, 26, 4.6, 7.2, 9),
-    saplings: scatter(random, 34, 2.6, 4, 7.5),
-    bushes: scatter(random, 48, 2.2, 3.8, 6.5),
-    boulders: scatter(random, 16, 2.4, 4.2, 7),
-    stones: scatter(random, 28, 1.3, 2.2, 5.5),
+    pines: scatter(random, 115, 4.4, 7.1, 8),
+    oaks: scatter(random, 32, 4.6, 7.2, 9),
+    saplings: scatter(random, 48, 2.6, 4, 7.5),
+    bushes: scatter(random, 64, 2.2, 3.8, 6.5),
+    boulders: scatter(random, 22, 2.4, 4.2, 7),
+    stones: scatter(random, 36, 1.3, 2.2, 5.5),
   }
 }
 
@@ -327,9 +327,9 @@ export function createTerrain() {
     const road = nearestRoad(x, z).distance
     const high = smoothstep(8, 22, y)
     const shore = lake < 1.4 ? 1 - smoothstep(0.9, 1.4, lake) : 0
-    let r = 0.55 + high * 0.22
-    let g = 0.58 - high * 0.12
-    let b = 0.36 - high * 0.08
+    let r = 0.52 + high * 0.17
+    let g = 0.64 - high * 0.1
+    let b = 0.30 - high * 0.04
     if (shore > 0) {
       r = r * (1 - shore) + 0.73 * shore
       g = g * (1 - shore) + 0.64 * shore

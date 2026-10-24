@@ -1,4 +1,4 @@
-import { Environment, Sky, useProgress } from '@react-three/drei'
+import { Environment, useProgress } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, SMAA, Vignette } from '@react-three/postprocessing'
 import { Physics } from '@react-three/rapier'
@@ -15,6 +15,7 @@ import { Hud } from './ui/Hud.tsx'
 import { StopMarkers } from './world/StopMarkers.tsx'
 import { Valley } from './world/Valley.tsx'
 import { FeatureSites } from './world/FeatureSites.tsx'
+import { ScenicBackdrop } from './world/ScenicBackdrop.tsx'
 
 bindSessionControls()
 
@@ -56,25 +57,19 @@ export default function App() {
         gl={{
           antialias: false,
           toneMapping: ACESFilmicToneMapping,
-          toneMappingExposure: 1.06,
+          toneMappingExposure: 0.98,
           powerPreference: 'high-performance',
         }}
         onCreated={({ scene }) => {
-          scene.environmentIntensity = 0.58
+          scene.environmentIntensity = 0.82
         }}
       >
         <Suspense fallback={null}>
-          <fog attach="fog" args={['#f0cba6', 45, 185]} />
-          <hemisphereLight color="#ffe4c4" groundColor="#66724c" intensity={0.48} />
+          <fog attach="fog" args={['#eab488', 115, 360]} />
+          <hemisphereLight color="#fff0ce" groundColor="#6d7645" intensity={0.66} />
           <Sun />
+          <ScenicBackdrop />
           <Environment files="/hdri/kiara_1_dawn_1k.hdr" background={false} />
-          <Sky
-            sunPosition={[68, 13, -38]}
-            turbidity={7.2}
-            rayleigh={1.1}
-            mieCoefficient={0.0055}
-            mieDirectionalG={0.86}
-          />
           <Physics gravity={[0, -9.81, 0]} timeStep={1 / 60}>
             <Valley />
             <DriveCar />

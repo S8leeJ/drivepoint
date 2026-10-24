@@ -19,7 +19,7 @@ import { getSpawn } from '../world/terrain.ts'
 import { CameraDirector } from './FeatureCamera.tsx'
 import { usePreparedCar } from './prepare.ts'
 import { BRAKE_FORCE, CHASSIS_MASS, CONNECTION_Y, ENGINE_FORCE, HANDBRAKE_FORCE, REST_LENGTH, REVERSE_SPEED, TOP_SPEED, WHEEL_RADIUS } from './spec.ts'
-import { SupraKit } from './SupraKit.tsx'
+import { ModernHatch } from './ModernHatch.tsx'
 import { useVehicleController } from './useVehicleController.ts'
 
 const fallback = getSpawn()
@@ -324,14 +324,13 @@ export function Car({ vehicle, paint, initial }: CarProps) {
           restitution={0.02}
         />
         <group ref={visual}>
-          <primitive object={parts.body} />
+          {vehicle.kit ? <ModernHatch color={paint.hex} tailLight={tailLight} brakeGlow={brakeGlow} /> : <primitive object={parts.body} />}
           {parts.extras.map((extra) => (
             <primitive key={extra.uuid} object={extra} />
           ))}
           {parts.wheels.map((wheel) => (
             <primitive key={wheel.name} object={wheel} />
           ))}
-          {vehicle.kit && <SupraKit color={paint.hex} tailLight={tailLight} brakeGlow={brakeGlow} />}
         </group>
       </RigidBody>
       <CameraDirector target={visual} />

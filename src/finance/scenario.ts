@@ -29,7 +29,7 @@ const initialInputs: LoanInputs = {
 }
 
 let state: ScenarioState = {
-  active: { vehicleId: 'hatch', colorId: 'ember', inputs: initialInputs },
+  active: { vehicleId: 'hatch', colorId: 'green', inputs: initialInputs },
   notice: null,
   compareA: null,
   compareB: null,

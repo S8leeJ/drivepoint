@@ -8,7 +8,7 @@ import {
   FEATURES,
   nearestFeature,
 } from '../experience/destinations.ts'
-import { openFeature, requestFeature, skipTravel, travelProgress, useSession, cancelTravel } from '../experience/session.ts'
+import { openFeature, requestFeature, skipTravel, travelProgress, useSession, cancelTravel, closeFeature } from '../experience/session.ts'
 import { CUSTOMERS, type Customer } from '../finance/customers.ts'
 import type { Recommendation } from '../finance/recommend.ts'
 import { HINT_RADIUS, nearestStop, OPEN_RADIUS, OPEN_SPEED_KMH, type RoadStop } from '../finance/stops.ts'
@@ -55,6 +55,7 @@ export function Hud({
   const [activeStop, setActiveStop] = useState<RoadStop | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [arrival, setArrival] = useState<(typeof FEATURES)['financing'] | null>(null)
+  const [nearbyFeature, setNearbyFeature] = useState<(typeof FEATURES)['financing']>(FEATURES.financing)
   const [progress, setProgress] = useState(0)
   const [requested, setRequested] = useState<Partial<Record<Customer['id'], boolean>>>({})
   const locked = experience.mode === 'feature' || experience.mode === 'timeline'
@@ -73,6 +74,7 @@ export function Hud({
       }
       const nearStop = nearestStop(telemetry.x, telemetry.z)
       const nearFeature = nearestFeature(telemetry.x, telemetry.z)
+      setNearbyFeature(nearFeature.feature)
       const stopArrived = nearStop.distance <= OPEN_RADIUS && telemetry.speedKmh <= OPEN_SPEED_KMH
       const featureArrived = nearFeature.distance <= FEATURE_OPEN_RADIUS && telemetry.speedKmh <= FEATURE_OPEN_SPEED_KMH
       const showFeature = featureArrived && (!stopArrived || nearFeature.distance <= nearStop.distance)
@@ -93,12 +95,14 @@ export function Hud({
 
   const traveling = experience.mode === 'guided' && experience.travelFeature
   const place = traveling ? FEATURES[experience.travelFeature!].place : ''
+  const nearbyName = nearbyFeature.id === 'financing' ? 'Cost Studio' : nearbyFeature.place
 
   return (
     <div className={locked ? 'hud driving-locked' : 'hud'}>
       <div className="title-block">
-        <p className="eyebrow">Toyota Financial Services</p>
-        <h1>What's Your Next Move?</h1>
+        <p className="eyebrow">Toyota Financial Services · Golden hour</p>
+        <h1>Golden Valley</h1>
+        <p className="title-subtitle">What's your next move?</p>
         <div className="customers">
           {CUSTOMERS.map((person) => (
             <button
@@ -111,14 +115,23 @@ export function Hud({
             </button>
           ))}
         </div>
+      </div>
+      <div className="top-actions">
         <div className="feature-nav" role="navigation" aria-label="Valley features">
+          <button
+            type="button"
+            className={experience.mode === 'manual' ? 'nav-pill active' : 'nav-pill'}
+            onClick={() => experience.mode === 'guided' ? cancelTravel() : closeFeature()}
+          >
+            Drive
+          </button>
           {FEATURE_ORDER.map((id) => {
             const active = experience.feature === id || experience.travelFeature === id
             return (
               <button
                 key={id}
                 type="button"
-                className={active ? 'customer on' : 'customer'}
+                className={active ? 'nav-pill active' : 'nav-pill'}
                 aria-current={active ? 'true' : undefined}
                 onClick={() => requestFeature(id)}
               >
@@ -127,17 +140,30 @@ export function Hud({
             )
           })}
         </div>
+        <button
+          type="button"
+          className="mute nav-pill"
+          onClick={() => {
+            engine.ensure()
+            setMuted(toggleMute())
+          }}
+        >
+          {muted ? 'Sound off' : 'Sound on'}
+        </button>
       </div>
-      <button
-        type="button"
-        className="mute"
-        onClick={() => {
-          engine.ensure()
-          setMuted(toggleMute())
-        }}
-      >
-        {muted ? 'Sound off' : 'Sound on'}
-      </button>
+      {experience.mode === 'manual' && !activeStop && !arrival && (
+        <>
+          <button type="button" className="roadside-callout" onClick={() => requestFeature(nearbyFeature.id)}>
+            <span className="eyebrow">Roadside destination</span>
+            <strong>{nearbyName} <span aria-hidden="true">→</span></strong>
+          </button>
+          <div className="drive-note">
+            <p className="eyebrow">The next turn</p>
+            <h2>A place to pause.</h2>
+            <p>Follow the road, park near a destination, and explore when you're ready.</p>
+          </div>
+        </>
+      )}
       {activeStop && !locked && (
         <NextMove
           customer={customer}

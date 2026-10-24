@@ -9,7 +9,7 @@ export function Sun() {
   useFrame(() => {
     const sun = light.current
     if (!sun) return
-    sun.position.set(focusPoint.x + 48, focusPoint.y + 34, focusPoint.z - 26)
+    sun.position.set(focusPoint.x - 30, focusPoint.y + 39, focusPoint.z + 45)
     sun.target.position.copy(focusPoint)
     sun.target.updateMatrixWorld()
   })
@@ -19,7 +19,7 @@ export function Sun() {
       ref={light}
       castShadow
       color="#ffc48a"
-      intensity={3.2}
+      intensity={2.35}
       shadow-mapSize-width={2048}
       shadow-mapSize-height={2048}
       shadow-camera-near={4}

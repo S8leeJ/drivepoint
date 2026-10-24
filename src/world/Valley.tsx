@@ -3,6 +3,9 @@ import { CuboidCollider, HeightfieldCollider, RigidBody } from '@react-three/rap
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   CanvasTexture,
+  BufferAttribute,
+  BufferGeometry,
+  DoubleSide,
   InstancedMesh,
   Mesh,
   MeshStandardMaterial,
@@ -51,17 +54,16 @@ function makeRoadTexture() {
   canvas.height = 512
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Could not draw the road')
-  context.fillStyle = '#3c3833'
+  context.fillStyle = '#45404c'
   context.fillRect(0, 0, 256, 512)
   for (let i = 0; i < 5000; i += 1) {
-    const shade = 48 + Math.random() * 36
-    context.fillStyle = `rgba(${shade}, ${shade - 6}, ${shade - 10}, 0.28)`
+    const shade = 55 + Math.random() * 26
+    context.fillStyle = `rgba(${shade}, ${shade - 3}, ${shade + 2}, 0.17)`
     context.fillRect(Math.random() * 256, Math.random() * 512, 2, 2)
   }
-  context.fillStyle = '#f3ead8'
-  context.fillRect(12, 0, 7, 512)
-  context.fillRect(237, 0, 7, 512)
-  for (let y = 20; y < 512; y += 72) context.fillRect(121, y, 14, 36)
+  context.fillStyle = '#f7e6d1'
+  context.fillRect(8, 0, 5, 512)
+  context.fillRect(243, 0, 5, 512)
   const texture = new CanvasTexture(canvas)
   texture.wrapS = RepeatWrapping
   texture.wrapT = RepeatWrapping
@@ -69,6 +71,25 @@ function makeRoadTexture() {
   texture.anisotropy = 8
   texture.needsUpdate = true
   return texture
+}
+
+function makeLakeHighlights() {
+  const points: number[] = []
+  for (let i = 0; i < 54; i += 1) {
+    const angle = i * 2.39996
+    const radius = Math.sqrt((i + 0.5) / 54)
+    const x = LAKE_CENTER.x - 10 + Math.cos(angle) * radius * 25
+    const z = LAKE_CENTER.z + Math.sin(angle) * radius * 23
+    const width = 1.3 + (i % 6) * 0.42
+    const depth = 0.14 + (i % 4) * 0.08
+    const y = WATER_Y + 0.035
+    points.push(x - width, y, z, x + width, y, z, x - width * .78, y, z + depth)
+    points.push(x + width, y, z, x + width * .74, y, z + depth, x - width * .78, y, z + depth)
+  }
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(points), 3))
+  geometry.computeVertexNormals()
+  return geometry
 }
 
 function bakeModel(root: Object3D) {
@@ -183,6 +204,7 @@ export function Valley() {
   const terrain = useMemo(() => createTerrain(), [])
   const road = useMemo(() => createRoadGeometry(), [])
   const roadMap = useMemo(() => makeRoadTexture(), [])
+  const lakeHighlights = useMemo(() => makeLakeHighlights(), [])
   const scenery = useMemo(() => createScenery(), [])
   const buildings = useMemo(() => createBuildings(), [])
   const scale = useMemo(() => ({ x: WORLD_SIZE, y: 1, z: WORLD_SIZE }), [])
@@ -208,7 +230,10 @@ export function Valley() {
         scale={[LAKE_CENTER.rx, LAKE_CENTER.rz, 1]}
       >
         <circleGeometry args={[1, 56]} />
-        <meshStandardMaterial color="#6e908c" roughness={0.12} metalness={0.12} transparent opacity={0.9} envMapIntensity={1.1} />
+        <meshBasicMaterial color="#648fa6" fog={false} />
+      </mesh>
+      <mesh geometry={lakeHighlights}>
+        <meshBasicMaterial color="#ffcf7a" transparent opacity={0.38} depthWrite={false} side={DoubleSide} fog={false} />
       </mesh>
       <Scatter url={NATURE.pines} items={scenery.pines} shadows />
       <Scatter url={NATURE.oaks} items={scenery.oaks} shadows />

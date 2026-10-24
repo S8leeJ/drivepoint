@@ -11,6 +11,7 @@ const position = new Vector3()
 const forward = new Vector3()
 const rayDir = new Vector3()
 const up = new Vector3()
+const cameraRight = new Vector3()
 const quat = new Quaternion()
 
 type ChaseCameraProps = {
@@ -18,7 +19,7 @@ type ChaseCameraProps = {
 }
 
 export function ChaseCamera({ target }: ChaseCameraProps) {
-  const { camera } = useThree()
+  const { camera, size } = useThree()
   const { world, rapier } = useRapier()
   const smoothed = useRef(camera.position.clone())
   const look = useRef(new Vector3())
@@ -43,11 +44,14 @@ export function ChaseCamera({ target }: ChaseCameraProps) {
     forward.set(0, 0, 1).applyQuaternion(quat)
 
     const speed = Math.abs(telemetry.speedMs)
-    lookAt.copy(position).addScaledVector(forward, 2.6 + Math.min(speed, 46) * 0.09)
-    lookAt.y += 0.82
+    lookAt.copy(position).addScaledVector(forward, 3.5 + Math.min(speed, 46) * 0.08)
+    lookAt.y += 0.95
 
-    desired.copy(position).addScaledVector(forward, -6.5)
-    desired.y += 2.45
+    const compact = size.width <= 800
+    desired.copy(position).addScaledVector(forward, compact ? -6.1 : -5.0)
+    cameraRight.set(1, 0, 0).applyQuaternion(quat)
+    desired.addScaledVector(cameraRight, 0.6)
+    desired.y += compact ? 2.25 : 1.9
 
     const origin = { x: position.x, y: position.y + 1.2, z: position.z }
     rayDir.set(desired.x - origin.x, desired.y - origin.y, desired.z - origin.z)
@@ -82,7 +86,7 @@ export function ChaseCamera({ target }: ChaseCameraProps) {
     view.position.copy(smoothed.current)
     view.lookAt(look.current)
 
-    const fov = 50 + Math.min(speed, 52) * 0.38
+    const fov = (compact ? 55 : 52) + Math.min(speed, 52) * 0.29
     view.fov += (fov - view.fov) * Math.min(1, delta * 2.4)
     view.updateProjectionMatrix()
   })
