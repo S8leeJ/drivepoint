@@ -1,5 +1,5 @@
 import { frameAt, LOOP_LENGTH, sampleHeight } from '../world/terrain.ts'
-import type { StopId } from './recommend.ts'
+import type { StopId } from './decide.ts'
 
 export const HINT_RADIUS = 45
 export const OPEN_RADIUS = 16

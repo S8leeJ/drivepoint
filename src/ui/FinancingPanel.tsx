@@ -1,8 +1,10 @@
 import { useMemo } from 'react'
 import { closeFeature, requestFeature } from '../experience/session.ts'
+import { restoreOffer } from '../finance/journey.ts'
 import { buildLoan, formatMoney, formatRate, maxDownPayment } from '../finance/loan.ts'
 import { addActiveToCompare, clearNotice, setInputs, useScenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
+import { DecisionStrip } from './DecisionStrip.tsx'
 import { Field } from './Fields.tsx'
 
 export function FinancingPanel() {
@@ -23,7 +25,8 @@ export function FinancingPanel() {
           Back to driving
         </button>
       </div>
-      <p className="fine">Illustrative example. Not a credit offer or a Toyota Financial Services quote.</p>
+      <DecisionStrip />
+      <p className="fine">Illustrative example. Not a credit offer or a Toyota Financial Services quote. Editing these fields updates the next move.</p>
       {notice && (
         <p className="note strong">
           {notice}{' '}
@@ -127,6 +130,9 @@ export function FinancingPanel() {
         </button>
         <button type="button" className="ghost" onClick={() => requestFeature('timeline')}>
           Ownership timeline
+        </button>
+        <button type="button" className="ghost" onClick={restoreOffer}>
+          Starting offer
         </button>
       </div>
     </aside>

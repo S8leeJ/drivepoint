@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from 'react'
+import { customerById } from './customers.ts'
+import { baselineOffer } from './decide.ts'
 import { buildLoan, formatMoney, maxDownPayment, sanitizeInputs, type LoanInputs } from './loan.ts'
 import { vehicleById, type PaintId, type VehicleId } from './vehicles.ts'
 
@@ -18,15 +20,7 @@ type ScenarioState = {
 
 const listeners = new Set<() => void>()
 
-const initialInputs: LoanInputs = {
-  price: 32450,
-  downPayment: 4000,
-  annualRate: 5.9,
-  termMonths: 60,
-  taxRate: 6.25,
-  fees: 499,
-  rollExtras: false,
-}
+const initialInputs: LoanInputs = baselineOffer(customerById('maya')).inputs
 
 let state: ScenarioState = {
   active: { vehicleId: 'hatch', colorId: 'green', inputs: initialInputs },
@@ -116,6 +110,27 @@ export function chooseVehicle(vehicleId: VehicleId) {
 export function clearNotice() {
   if (!state.notice) return
   state = { ...state, notice: null }
+  emit()
+}
+
+export function applyScenario(next: Scenario, notice: string | null) {
+  const inputs = sanitizeInputs(next.inputs)
+  state = {
+    ...state,
+    active: { vehicleId: next.vehicleId, colorId: next.colorId, inputs },
+    notice,
+    timelineMonth: Math.min(state.timelineMonth, inputs.termMonths),
+  }
+  emit()
+}
+
+export function setComparePair(a: Scenario, b: Scenario, notice: string) {
+  state = {
+    ...state,
+    compareA: cloneScenario(a),
+    compareB: cloneScenario(b),
+    notice,
+  }
   emit()
 }
 

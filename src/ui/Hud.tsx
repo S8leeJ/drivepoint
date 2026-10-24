@@ -8,14 +8,15 @@ import {
   FEATURES,
   nearestFeature,
 } from '../experience/destinations.ts'
-import { openFeature, requestFeature, skipTravel, travelProgress, useSession, cancelTravel, closeFeature } from '../experience/session.ts'
-import { CUSTOMERS, type Customer } from '../finance/customers.ts'
-import type { Recommendation } from '../finance/recommend.ts'
+import { openFeature, requestFeature, skipTravel, travelProgress, useSession, cancelTravel, backToDrive, openOverlay } from '../experience/session.ts'
+import { CUSTOMERS } from '../finance/customers.ts'
+import { loadCustomer, useJourney } from '../finance/journey.ts'
 import { HINT_RADIUS, nearestStop, OPEN_RADIUS, OPEN_SPEED_KMH, type RoadStop } from '../finance/stops.ts'
 import { drive, setTouch, telemetry, toggleMute, type HeldControl } from '../input/controls.ts'
 import { ComparePanel } from './ComparePanel.tsx'
 import { ExplorePanel } from './ExplorePanel.tsx'
 import { FinancingPanel } from './FinancingPanel.tsx'
+import { MovePanel } from './MovePanel.tsx'
 import { NextMove } from './NextMove.tsx'
 import { TimelinePanel } from './TimelinePanel.tsx'
 
@@ -39,16 +40,9 @@ function Pedal({ control, label }: { control: HeldControl; label: string }) {
   )
 }
 
-export function Hud({
-  customer,
-  recommendation,
-  onCustomer,
-}: {
-  customer: Customer
-  recommendation: Recommendation
-  onCustomer: (id: Customer['id']) => void
-}) {
+export function Hud() {
   const experience = useSession()
+  const journey = useJourney()
   const [speed, setSpeed] = useState(0)
   const [gear, setGear] = useState(telemetry.gear)
   const [muted, setMuted] = useState(drive.muted)
@@ -57,8 +51,7 @@ export function Hud({
   const [arrival, setArrival] = useState<(typeof FEATURES)['financing'] | null>(null)
   const [nearbyFeature, setNearbyFeature] = useState<(typeof FEATURES)['financing']>(FEATURES.financing)
   const [progress, setProgress] = useState(0)
-  const [requested, setRequested] = useState<Partial<Record<Customer['id'], boolean>>>({})
-  const locked = experience.mode === 'feature' || experience.mode === 'timeline'
+  const locked = experience.mode === 'feature' || experience.mode === 'timeline' || experience.overlay != null
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -108,20 +101,29 @@ export function Hud({
             <button
               key={person.id}
               type="button"
-              className={person.id === customer.id ? 'customer on' : 'customer'}
-              onClick={() => onCustomer(person.id)}
+              className={person.id === journey.customerId ? 'customer on' : 'customer'}
+              onClick={() => loadCustomer(person.id)}
             >
               {person.name}
             </button>
           ))}
+        </div>
+        <div className="desk-nav">
+          <button
+            type="button"
+            className={experience.overlay === 'move' ? 'customer on' : 'customer'}
+            onClick={() => openOverlay('move')}
+          >
+            Next move
+          </button>
         </div>
       </div>
       <div className="top-actions">
         <div className="feature-nav" role="navigation" aria-label="Valley features">
           <button
             type="button"
-            className={experience.mode === 'manual' ? 'nav-pill active' : 'nav-pill'}
-            onClick={() => experience.mode === 'guided' ? cancelTravel() : closeFeature()}
+            className={experience.mode === 'manual' && !experience.overlay ? 'nav-pill active' : 'nav-pill'}
+            onClick={() => (experience.mode === 'guided' ? cancelTravel() : backToDrive())}
           >
             Drive
           </button>
@@ -151,7 +153,7 @@ export function Hud({
           {muted ? 'Sound off' : 'Sound on'}
         </button>
       </div>
-      {experience.mode === 'manual' && !activeStop && !arrival && (
+      {!locked && !activeStop && !arrival && (
         <>
           <button type="button" className="roadside-callout" onClick={() => requestFeature(nearbyFeature.id)}>
             <span className="eyebrow">Roadside destination</span>
@@ -160,19 +162,12 @@ export function Hud({
           <div className="drive-note">
             <p className="eyebrow">The next turn</p>
             <h2>A place to pause.</h2>
-            <p>Follow the road, park near a destination, and explore when you're ready.</p>
+            <p>Open Next move for the recommendation, or park near a stop when you want the road to lead you there.</p>
           </div>
         </>
       )}
-      {activeStop && !locked && (
-        <NextMove
-          customer={customer}
-          recommendation={recommendation}
-          stopId={activeStop.id}
-          requested={Boolean(requested[customer.id])}
-          onRequest={() => setRequested((current) => ({ ...current, [customer.id]: true }))}
-        />
-      )}
+      {activeStop && !locked && <NextMove stopId={activeStop.id} />}
+      {experience.overlay === 'move' && <MovePanel />}
       {experience.mode === 'feature' && experience.feature === 'financing' && <FinancingPanel />}
       {experience.mode === 'timeline' && <TimelinePanel />}
       {experience.mode === 'feature' && experience.feature === 'explore' && <ExplorePanel />}

@@ -3,6 +3,7 @@ import { closeFeature } from '../experience/session.ts'
 import { buildLoan, formatMoney, scheduleRow } from '../finance/loan.ts'
 import { setTimelineMonth, useScenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
+import { DecisionStrip } from './DecisionStrip.tsx'
 
 function monthTitle(month: number) {
   const date = new Date(Date.UTC(2026, 9 + month, 1))
@@ -33,8 +34,9 @@ export function TimelinePanel() {
           Back to driving
         </button>
       </div>
+      <DecisionStrip />
       <p className="fine">
-        {vehicle.name} on the north road. The car’s place on this segment is month {timelineMonth} of {term}. Illustrative schedule, not a payoff quote.
+        {vehicle.name} on the north road. The car’s place on this segment is month {timelineMonth} of {term}. This schedule is the offer open in financing, not a payoff quote for a different contract.
       </p>
       <label className="field">
         <span>Month</span>

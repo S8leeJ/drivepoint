@@ -211,12 +211,36 @@ h1 {
   font-size: 22px;
 }
 
-.next-move ul {
+.next-move ul, .feature-panel ul {
   margin: 0 0 8px;
   padding-left: 18px;
   font-size: 13px;
   line-height: 1.35;
 }
+
+.desk-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.decision-strip {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  border-radius: 14px;
+  border: 1px solid rgba(238, 201, 137, 0.45);
+  background: rgba(238, 201, 137, 0.12);
+  cursor: pointer;
+}
+
+.decision-strip strong { font-family: Fraunces, Georgia, serif; font-size: 18px; font-weight: 560; }
+.decision-strip em { font-style: normal; font-size: 13px; line-height: 1.4; }
+
+.path-list { list-style: none; padding-left: 0; }
+.path-list li { display: grid; gap: 2px; margin: 0 0 8px; }
+.path-list span { opacity: 0.88; }
 
 .next-move li {
   margin: 0 0 4px;

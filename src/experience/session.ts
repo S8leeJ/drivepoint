@@ -15,6 +15,7 @@ import {
 export type MoveMode = 'manual' | 'guided' | 'feature' | 'timeline'
 export type CameraOwner = 'chase' | 'financing' | 'timeline' | 'explore' | 'compare'
 export type CompareFocus = 'both' | 'a' | 'b'
+export type OverlayId = 'move' | 'plan' | 'assist' | 'garage' | 'visit' | 'business'
 
 export type Travel = {
   feature: FeatureId
@@ -33,6 +34,7 @@ type SessionSnapshot = {
   reducedMotion: boolean
   narrow: boolean
   travelFeature: FeatureId | null
+  overlay: OverlayId | null
 }
 
 const listeners = new Set<() => void>()
@@ -47,6 +49,7 @@ export const session = {
   compareFocus: 'both' as CompareFocus,
   reducedMotion: false,
   narrow: false,
+  overlay: null as OverlayId | null,
 }
 
 let snapshot: SessionSnapshot = toSnapshot()
@@ -60,11 +63,13 @@ function toSnapshot(): SessionSnapshot {
     reducedMotion: session.reducedMotion,
     narrow: session.narrow,
     travelFeature: session.travel?.feature ?? null,
+    overlay: session.overlay,
   }
 }
 
 function syncBlock() {
-  drive.block = session.mode === 'manual' ? 'manual' : session.mode === 'guided' ? 'guided' : 'locked'
+  if (session.overlay) drive.block = 'locked'
+  else drive.block = session.mode === 'manual' ? 'manual' : session.mode === 'guided' ? 'guided' : 'locked'
 }
 
 function emit() {
@@ -104,6 +109,7 @@ function alignTimelineMonthToCar() {
 }
 
 export function openFeature(feature: FeatureId, fromRoad = false) {
+  session.overlay = null
   if (feature === 'timeline' && fromRoad) alignTimelineMonthToCar()
   clearHeldInputs()
   session.snapDistance = targetFor(feature)
@@ -123,6 +129,7 @@ export function requestFeature(feature: FeatureId) {
   const target = targetFor(feature)
   const from = distanceAtPosition(telemetry.x, telemetry.z)
   const path = shortestPath(from, target)
+  session.overlay = null
   if (session.reducedMotion || path.length < 2.4) {
     openFeature(feature)
     return
@@ -182,6 +189,33 @@ export function closeFeature() {
   emit()
 }
 
+export function openOverlay(id: OverlayId) {
+  if (session.overlay === id && session.mode === 'manual' && !session.travel) return
+  clearHeldInputs()
+  session.travel = null
+  session.feature = null
+  session.mode = 'manual'
+  session.camera = 'chase'
+  session.overlay = id
+  cameraSnap.current = true
+  emit()
+}
+
+export function closeOverlay() {
+  if (!session.overlay) return
+  session.overlay = null
+  emit()
+}
+
+export function backToDrive() {
+  session.overlay = null
+  if (session.mode === 'manual' && !session.travel) {
+    emit()
+    return
+  }
+  closeFeature()
+}
+
 export function setCompareFocus(focus: CompareFocus) {
   if (session.compareFocus === focus) return
   session.compareFocus = focus
@@ -191,6 +225,10 @@ export function setCompareFocus(focus: CompareFocus) {
 export function bindSessionControls() {
   drive.onCancelGuided = () => cancelTravel()
   drive.onEscape = () => {
+    if (session.overlay) {
+      closeOverlay()
+      return
+    }
     if (session.mode === 'feature' || session.mode === 'timeline') closeFeature()
   }
   syncBlock()

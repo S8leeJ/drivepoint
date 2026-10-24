@@ -1,7 +1,7 @@
 import { Billboard } from '@react-three/drei'
 import { useEffect, useMemo } from 'react'
 import { CanvasTexture, SRGBColorSpace } from 'three'
-import type { StopId } from '../finance/recommend.ts'
+import { useDecision } from '../finance/journey.ts'
 import { STOPS, type RoadStop } from '../finance/stops.ts'
 
 function labelTexture(text: string, bright: boolean) {
@@ -53,11 +53,12 @@ function StopRing({ stop, bright }: { stop: RoadStop; bright: boolean }) {
   )
 }
 
-export function StopMarkers({ recommended }: { recommended: StopId }) {
+export function StopMarkers() {
+  const decision = useDecision()
   return (
     <group>
       {STOPS.map((stop) => {
-        const bright = stop.id === recommended
+        const bright = stop.id === decision.winnerStop
         return (
           <group key={stop.id}>
             <StopRing stop={stop} bright={bright} />

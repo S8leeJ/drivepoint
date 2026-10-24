@@ -3,6 +3,7 @@ import { closeFeature, requestFeature, setCompareFocus, useSession } from '../ex
 import { buildLoan, compareTradeoff, formatMoney, formatRate, maxDownPayment, type LoanInputs, type LoanQuote } from '../finance/loan.ts'
 import { continueWith, replaceCompare, updateCompare, useScenario, type Scenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
+import { DecisionStrip } from './DecisionStrip.tsx'
 import { Field } from './Fields.tsx'
 
 function signed(cents: number) {
@@ -31,6 +32,7 @@ export function ComparePanel() {
           Back to driving
         </button>
       </div>
+      <DecisionStrip />
       <p className="fine">Each bay is an independent snapshot. Editing one does not change the other or the car you are financing until you continue.</p>
       {notice && <p className="note strong">{notice}</p>}
       <div className="choice-row" role="group" aria-label="Bay camera">

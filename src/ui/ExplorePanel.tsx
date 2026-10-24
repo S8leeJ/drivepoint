@@ -1,7 +1,9 @@
 import { closeFeature, requestFeature } from '../experience/session.ts'
+import { shopVehicle } from '../finance/journey.ts'
 import { formatMoney } from '../finance/loan.ts'
 import { addActiveToCompare, chooseVehicle, setColor, useScenario } from '../finance/scenario.ts'
 import { PAINTS, VEHICLES, vehicleById, type PaintId } from '../finance/vehicles.ts'
+import { DecisionStrip } from './DecisionStrip.tsx'
 
 export function ExplorePanel() {
   const { active, notice } = useScenario()
@@ -19,7 +21,8 @@ export function ExplorePanel() {
           Back to driving
         </button>
       </div>
-      <p className="fine">Drag to orbit the car. Illustrative specifications, not a manufacturer listing.</p>
+      <DecisionStrip />
+      <p className="fine">Drag to orbit the car. Choosing a vehicle replaces the open offer with that demo price. Illustrative specifications, not a manufacturer listing.</p>
       {notice && <p className="note strong">{notice}</p>}
       <div className="choice-row" role="listbox" aria-label="Vehicles">
         {VEHICLES.map((option) => (
@@ -28,7 +31,10 @@ export function ExplorePanel() {
             type="button"
             className={option.id === active.vehicleId ? 'customer on' : 'customer'}
             aria-pressed={option.id === active.vehicleId}
-            onClick={() => chooseVehicle(option.id)}
+            onClick={() => {
+              shopVehicle()
+              chooseVehicle(option.id)
+            }}
           >
             {option.name}
           </button>
