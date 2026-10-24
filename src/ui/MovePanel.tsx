@@ -1,4 +1,4 @@
-import { closeOverlay, requestFeature } from '../experience/session.ts'
+import { closeOverlay, openOverlay, requestFeature } from '../experience/session.ts'
 import { restoreOffer, useDecision, useJourney } from '../finance/journey.ts'
 import { formatMoney } from '../finance/loan.ts'
 import { followNext, openStagedCompare } from './actions.ts'
@@ -83,6 +83,9 @@ export function MovePanel() {
         </button>
         <button type="button" className="ghost" onClick={restoreOffer}>
           Starting offer
+        </button>
+        <button type="button" className="ghost" onClick={() => openOverlay('plan')}>
+          Edit the plan
         </button>
       </div>
       {notedThis && <p className="fine">Noted in this session only. It is not an appointment yet.</p>}

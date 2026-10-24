@@ -8,7 +8,9 @@ import {
   contractLoanInputs,
   decide,
   emptyOwnership,
+  monthlyEnergy,
   ratePercent,
+  savingsDown,
   type DecisionInput,
   type LeaseTerms,
   type OfferKind,
@@ -18,8 +20,12 @@ import {
   type Priority,
   type TradeTerms,
 } from './decide.ts'
+import { equityAdjustment } from './plan.ts'
 import { applyScenario, getLiveScenario, setComparePair, useScenario } from './scenario.ts'
 import { vehicleById } from './vehicles.ts'
+
+export type EnergyAssumptions = { mpg: number; gallonPrice: number }
+export type SavingsPlan = { monthly: number; months: number; futurePrice: number; futureRate: number }
 
 export type SessionEvent = {
   id: number
@@ -37,6 +43,8 @@ type JourneyState = {
   ownership: OwnershipCosts
   lease: LeaseTerms
   trade: TradeTerms
+  energy: EnergyAssumptions
+  savings: SavingsPlan
   noted: boolean
   events: SessionEvent[]
 }
@@ -54,6 +62,8 @@ let state: JourneyState = {
   ownership: emptyOwnership(),
   lease: baselineLease(opening),
   trade: baselineTrade(opening),
+  energy: { mpg: 32, gallonPrice: 3.4 },
+  savings: { monthly: 200, months: 18, futurePrice: 30000, futureRate: 6.5 },
   noted: false,
   events: [],
 }
@@ -67,6 +77,8 @@ function emit() {
     ownership: { ...state.ownership },
     lease: { ...state.lease },
     trade: { ...state.trade },
+    energy: { ...state.energy },
+    savings: { ...state.savings },
     contractOffer: state.contractOffer ? { ...state.contractOffer } : null,
     events: state.events.slice(),
   }
@@ -211,6 +223,58 @@ export function setLease(patch: Partial<LeaseTerms>) {
 export function setTrade(patch: Partial<TradeTerms>) {
   state = { ...state, trade: { ...state.trade, ...patch } }
   emit()
+}
+
+export function setEnergy(patch: Partial<EnergyAssumptions>) {
+  state = { ...state, energy: { ...state.energy, ...patch } }
+  emit()
+}
+
+export function setSavings(patch: Partial<SavingsPlan>) {
+  state = { ...state, savings: { ...state.savings, ...patch } }
+  emit()
+}
+
+function writeOffer(patch: Partial<DecisionInput['offer']>, notice: string, label: string) {
+  const active = getLiveScenario().active
+  remember(label, notice)
+  applyScenario({ ...active, inputs: { ...active.inputs, ...patch } }, notice)
+  emit()
+}
+
+export function applyUpfrontCash() {
+  writeOffer(
+    { downPayment: state.preferences.upfrontCash },
+    'Down payment now matches the cash on hand.',
+    'Applied upfront cash',
+  )
+}
+
+export function applyTradeEquity() {
+  const equity = state.trade.value - state.trade.payoff
+  const active = getLiveScenario().active.inputs
+  const next = equityAdjustment(active.price, active.downPayment, equity)
+  const notice = equity >= 0
+    ? 'Positive equity was added to the down payment.'
+    : 'Negative equity was added to the price so the shortfall is financed.'
+  writeOffer({ price: next.price, downPayment: next.downPayment }, notice, 'Applied trade equity')
+}
+
+export function applyFuelEstimate() {
+  const fuel = monthlyEnergy(state.preferences.annualMiles, state.energy.mpg, state.energy.gallonPrice)
+  state = { ...state, ownership: { ...state.ownership, fuel } }
+  remember('Updated the fuel estimate', `${fuel.toFixed(2)} a month`)
+  emit()
+}
+
+export function applySavingsCash() {
+  const extra = savingsDown(state.savings.monthly, state.savings.months)
+  const down = getLiveScenario().active.inputs.downPayment + extra
+  writeOffer(
+    { downPayment: down },
+    `Added ${extra.toFixed(0)} of hypothetical savings to the down payment. The future price and rate are still uncertain.`,
+    'Applied savings',
+  )
 }
 
 export function decisionInput(journey: JourneyState, offer: DecisionInput['offer'], vehicleName: string): DecisionInput {

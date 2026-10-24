@@ -17,6 +17,7 @@ import { ComparePanel } from './ComparePanel.tsx'
 import { ExplorePanel } from './ExplorePanel.tsx'
 import { FinancingPanel } from './FinancingPanel.tsx'
 import { MovePanel } from './MovePanel.tsx'
+import { PlanPanel } from './PlanPanel.tsx'
 import { NextMove } from './NextMove.tsx'
 import { TimelinePanel } from './TimelinePanel.tsx'
 
@@ -116,6 +117,13 @@ export function Hud() {
           >
             Next move
           </button>
+          <button
+            type="button"
+            className={experience.overlay === 'plan' ? 'customer on' : 'customer'}
+            onClick={() => openOverlay('plan')}
+          >
+            Plan
+          </button>
         </div>
       </div>
       <div className="top-actions">
@@ -168,6 +176,7 @@ export function Hud() {
       )}
       {activeStop && !locked && <NextMove stopId={activeStop.id} />}
       {experience.overlay === 'move' && <MovePanel />}
+      {experience.overlay === 'plan' && <PlanPanel />}
       {experience.mode === 'feature' && experience.feature === 'financing' && <FinancingPanel />}
       {experience.mode === 'timeline' && <TimelinePanel />}
       {experience.mode === 'feature' && experience.feature === 'explore' && <ExplorePanel />}
