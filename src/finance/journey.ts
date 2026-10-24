@@ -21,11 +21,32 @@ import {
   type TradeTerms,
 } from './decide.ts'
 import { equityAdjustment } from './plan.ts'
-import { applyScenario, getLiveScenario, setComparePair, useScenario } from './scenario.ts'
+import { applyScenario, getLiveScenario, setComparePair, useScenario, type Scenario } from './scenario.ts'
 import { vehicleById } from './vehicles.ts'
 
 export type EnergyAssumptions = { mpg: number; gallonPrice: number }
 export type SavingsPlan = { monthly: number; months: number; futurePrice: number; futureRate: number }
+
+export type SavedBay = {
+  id: string
+  name: string
+  scenario: Scenario
+  offerKind: OfferKind
+  preferences: Preferences
+}
+
+export type VisitStatus = 'idle' | 'prepared' | 'sent' | 'failed'
+export type RequestKind = 'test-drive' | 'appraisal' | 'financing' | 'service'
+
+export const CHECKLIST = [
+  ['license', 'Driver license'],
+  ['insurance', 'Proof of insurance'],
+  ['income', 'Proof of income'],
+  ['rate', 'Ask how the rate is quoted'],
+  ['fees', 'Ask which fees are required'],
+  ['compare', 'Compare two scenarios'],
+  ['timeline', 'Read the ownership timeline'],
+] as const
 
 export type SessionEvent = {
   id: number
@@ -47,6 +68,13 @@ type JourneyState = {
   savings: SavingsPlan
   noted: boolean
   showCosts: boolean
+  highlight: 'interest' | null
+  visitSummary: string
+  visitQuestions: string
+  visitStatus: VisitStatus
+  requestKind: RequestKind | null
+  checks: Record<string, boolean>
+  garage: SavedBay[]
   events: SessionEvent[]
 }
 
@@ -67,6 +95,13 @@ let state: JourneyState = {
   savings: { monthly: 200, months: 18, futurePrice: 30000, futureRate: 6.5 },
   noted: false,
   showCosts: false,
+  highlight: null,
+  visitSummary: '',
+  visitQuestions: '',
+  visitStatus: 'idle',
+  requestKind: null,
+  checks: Object.fromEntries(CHECKLIST.map(([id]) => [id, false])),
+  garage: [],
   events: [],
 }
 
@@ -135,6 +170,10 @@ export function loadCustomer(id: Customer['id']) {
     lease: baselineLease(customer),
     trade: baselineTrade(customer),
     noted: false,
+    visitSummary: '',
+    visitQuestions: '',
+    visitStatus: 'idle',
+    requestKind: null,
   }
   remember('Chose a customer', customer.name)
   applyScenario(
@@ -232,6 +271,12 @@ export function setEnergy(patch: Partial<EnergyAssumptions>) {
   emit()
 }
 
+export function setHighlight(highlight: 'interest' | null) {
+  if (state.highlight === highlight) return
+  state = { ...state, highlight }
+  emit()
+}
+
 export function setShowCosts(showCosts: boolean) {
   if (state.showCosts === showCosts) return
   state = { ...state, showCosts }
@@ -284,6 +329,74 @@ export function applySavingsCash() {
     `Added ${extra.toFixed(0)} of hypothetical savings to the down payment. The future price and rate are still uncertain.`,
     'Applied savings',
   )
+}
+
+let bayId = 1
+
+export function saveBay(name: string) {
+  const active = getLiveScenario().active
+  const bay: SavedBay = {
+    id: `bay-${bayId}`,
+    name: name.trim() || `Scenario ${bayId}`,
+    scenario: { vehicleId: active.vehicleId, colorId: active.colorId, inputs: { ...active.inputs } },
+    offerKind: state.offerKind,
+    preferences: { ...state.preferences },
+  }
+  bayId += 1
+  state = { ...state, garage: [bay, ...state.garage] }
+  remember('Saved a scenario', bay.name)
+  emit()
+}
+
+export function renameBay(id: string, name: string) {
+  state = {
+    ...state,
+    garage: state.garage.map((bay) => (bay.id === id ? { ...bay, name } : bay)),
+  }
+  emit()
+}
+
+export function deleteBay(id: string) {
+  const bay = state.garage.find((item) => item.id === id)
+  state = { ...state, garage: state.garage.filter((item) => item.id !== id) }
+  remember('Deleted a scenario', bay?.name ?? id)
+  emit()
+}
+
+export function reopenBay(id: string) {
+  const bay = state.garage.find((item) => item.id === id)
+  if (!bay) return
+  state = { ...state, offerKind: bay.offerKind, preferences: { ...bay.preferences } }
+  remember('Reopened a scenario', bay.name)
+  applyScenario(bay.scenario, `Reopened ${bay.name}. The saved copy stays in the garage.`)
+  emit()
+}
+
+export function toggleCheck(id: string) {
+  state = { ...state, checks: { ...state.checks, [id]: !state.checks[id] } }
+  emit()
+}
+
+export function prepareVisit(summary: string, questions: string) {
+  state = {
+    ...state,
+    visitSummary: summary,
+    visitQuestions: questions,
+    visitStatus: 'prepared',
+  }
+  remember('Prepared a visit', 'Summary is ready to edit')
+  emit()
+}
+
+export function setVisitDraft(summary: string, questions: string) {
+  state = { ...state, visitSummary: summary, visitQuestions: questions }
+  emit()
+}
+
+export function submitRequest(kind: RequestKind, fail: boolean) {
+  state = { ...state, requestKind: kind, visitStatus: fail ? 'failed' : 'sent' }
+  remember(fail ? 'Request failed in the local demo' : 'Stored a request on this device', kind)
+  emit()
 }
 
 export function decisionInput(journey: JourneyState, offer: DecisionInput['offer'], vehicleName: string): DecisionInput {

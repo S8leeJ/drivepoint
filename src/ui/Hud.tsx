@@ -16,8 +16,12 @@ import { drive, setTouch, telemetry, toggleMute, type HeldControl } from '../inp
 import { ComparePanel } from './ComparePanel.tsx'
 import { ExplorePanel } from './ExplorePanel.tsx'
 import { FinancingPanel } from './FinancingPanel.tsx'
+import { AssistPanel } from './AssistPanel.tsx'
+import { BusinessPanel } from './BusinessPanel.tsx'
+import { GaragePanel } from './GaragePanel.tsx'
 import { MovePanel } from './MovePanel.tsx'
 import { PlanPanel } from './PlanPanel.tsx'
+import { VisitPanel } from './VisitPanel.tsx'
 import { NextMove } from './NextMove.tsx'
 import { TimelinePanel } from './TimelinePanel.tsx'
 
@@ -124,6 +128,22 @@ export function Hud() {
           >
             Plan
           </button>
+          <button
+            type="button"
+            className={experience.overlay === 'assist' ? 'customer on' : 'customer'}
+            onClick={() => openOverlay('assist')}
+          >
+            Ask
+          </button>
+          <button type="button" className={experience.overlay === 'garage' ? 'customer on' : 'customer'} onClick={() => openOverlay('garage')}>
+            Garage
+          </button>
+          <button type="button" className={experience.overlay === 'visit' ? 'customer on' : 'customer'} onClick={() => openOverlay('visit')}>
+            Visit
+          </button>
+          <button type="button" className={experience.overlay === 'business' ? 'customer on' : 'customer'} onClick={() => openOverlay('business')}>
+            Business
+          </button>
         </div>
       </div>
       <div className="top-actions">
@@ -177,6 +197,10 @@ export function Hud() {
       {activeStop && !locked && <NextMove stopId={activeStop.id} />}
       {experience.overlay === 'move' && <MovePanel />}
       {experience.overlay === 'plan' && <PlanPanel />}
+      {experience.overlay === 'assist' && <AssistPanel />}
+      {experience.overlay === 'garage' && <GaragePanel />}
+      {experience.overlay === 'visit' && <VisitPanel />}
+      {experience.overlay === 'business' && <BusinessPanel />}
       {experience.mode === 'feature' && experience.feature === 'financing' && <FinancingPanel />}
       {experience.mode === 'timeline' && <TimelinePanel />}
       {experience.mode === 'feature' && experience.feature === 'explore' && <ExplorePanel />}

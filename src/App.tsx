@@ -10,6 +10,7 @@ import { bindSessionControls, watchPreferences } from './experience/session.ts'
 import { Sun } from './car/Sun.tsx'
 import { attachDriveInput } from './input/controls.ts'
 import { Hud } from './ui/Hud.tsx'
+import { PrintSheet } from './ui/PrintSheet.tsx'
 import { StopMarkers } from './world/StopMarkers.tsx'
 import { Valley } from './world/Valley.tsx'
 import { FeatureSites } from './world/FeatureSites.tsx'
@@ -80,6 +81,7 @@ export default function App() {
       </Canvas>
       <Loader />
       <Hud />
+      <PrintSheet />
     </div>
   )
 }

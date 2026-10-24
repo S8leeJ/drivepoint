@@ -656,13 +656,24 @@ html, body, #root, .app { background: #e7aa71; }
 .scenario-card, .figures div { background: rgba(255, 245, 223, .08); border: 1px solid rgba(255, 245, 223, .06); }
 .note.strong { background: rgba(238, 201, 137, .17); }
 .field input[type='range'] { accent-color: #eec989; }
-.field input[type='text'] { width: 100%; color: inherit; background: rgba(255, 245, 223, .08); border: 1px solid rgba(255, 245, 223, .16); border-radius: 8px; padding: 6px 8px; font: inherit; }
+.field input[type='text'], .field textarea { width: 100%; grid-column: 1 / -1; color: inherit; background: rgba(255, 245, 223, .08); border: 1px solid rgba(255, 245, 223, .16); border-radius: 8px; padding: 6px 8px; font: inherit; }
+.mark { outline: 2px solid #eec989; border-radius: 12px; }
 .cost-label { color: #1c1610; background: rgba(246, 237, 217, .94); padding: 4px 7px; border-radius: 8px; font: 600 12px/1.25 Outfit, sans-serif; text-align: center; white-space: nowrap; pointer-events: none; }
 .cost-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
 .cost-table caption { text-align: left; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
 .cost-table th, .cost-table td { text-align: left; padding: 6px 0; border-bottom: 1px solid rgba(255, 245, 223, .12); }
 .cost-table td { text-align: right; font-variant-numeric: tabular-nums; }
 .quote-box { width: 100%; min-height: 110px; margin: 8px 0; padding: 8px 10px; border-radius: 12px; border: 1px solid rgba(255, 245, 223, .16); background: rgba(255, 245, 223, .08); color: inherit; font: inherit; resize: vertical; }
+.funnel { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.funnel li { padding: 8px 12px; border-radius: 999px; background: rgba(255, 245, 223, .08); }
+.funnel li.on { background: #eec989; color: #26412f; }
+.print-sheet { display: none; }
+@media print {
+  html, body, #root, .app { height: auto; overflow: visible; background: white; }
+  canvas, .hud { display: none !important; }
+  .print-sheet { display: block; color: #1c1610; padding: 24px; }
+  .print-sheet h1, .print-sheet h2 { font-family: Georgia, serif; }
+}
 .travel-track span { background: #eec989; }
 
 @media (max-width: 1100px) {

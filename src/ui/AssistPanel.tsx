@@ -1,0 +1,85 @@
+import { useState } from 'react'
+import { closeOverlay, openOverlay, requestFeature } from '../experience/session.ts'
+import { answerQuestion, suggestions, type ExplainAction } from '../finance/explain.ts'
+import { recordEvent, setHighlight, setShowCosts, useDecision } from '../finance/journey.ts'
+
+function run(action: ExplainAction) {
+  if (action === 'interest') {
+    setHighlight('interest')
+    setShowCosts(true)
+    requestFeature('financing')
+    return
+  }
+  if (action === 'compare') {
+    requestFeature('compare')
+    return
+  }
+  if (action === 'timeline') {
+    requestFeature('timeline')
+    return
+  }
+  if (action === 'financing') {
+    requestFeature('financing')
+    return
+  }
+  if (action === 'plan') {
+    openOverlay('plan')
+    return
+  }
+  openOverlay('move')
+}
+
+export function AssistPanel() {
+  const decision = useDecision()
+  const [question, setQuestion] = useState('')
+  const [answer, setAnswer] = useState(() => answerQuestion('Why is this the next step?', decision))
+  const ask = (text: string) => {
+    const next = answerQuestion(text, decision)
+    setQuestion(text)
+    setAnswer(next)
+    recordEvent('Asked about the numbers', text)
+  }
+
+  return (
+    <aside className="feature-panel" aria-label="Explain the numbers">
+      <div className="panel-head">
+        <div>
+          <p className="eyebrow">Explain</p>
+          <h2>Ask about these numbers</h2>
+        </div>
+        <button type="button" className="text-button" onClick={closeOverlay}>
+          Back to driving
+        </button>
+      </div>
+      <p className="fine">Answers use the numbers in this session. They are not a credit decision and they do not call out for new data.</p>
+      <div className="choice-row">
+        {suggestions(decision).map((prompt) => (
+          <button key={prompt} type="button" className="customer" onClick={() => ask(prompt)}>
+            {prompt}
+          </button>
+        ))}
+      </div>
+      <label className="field">
+        <span>Your question</span>
+        <input
+          type="text"
+          value={question}
+          aria-label="Question about this scenario"
+          onChange={(event) => setQuestion(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && question.trim()) ask(question.trim())
+          }}
+        />
+      </label>
+      <button type="button" className="ghost" onClick={() => question.trim() && ask(question.trim())}>
+        Ask
+      </button>
+      <p aria-live="polite">{answer.text}</p>
+      {answer.action && answer.actionLabel && (
+        <button type="button" className="cta" onClick={() => run(answer.action!)}>
+          {answer.actionLabel}
+        </button>
+      )}
+    </aside>
+  )
+}

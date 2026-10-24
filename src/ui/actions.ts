@@ -1,6 +1,6 @@
 import { openOverlay, requestFeature } from '../experience/session.ts'
 import type { Decision } from '../finance/decide.ts'
-import { noteNextStep, presentPath, recordEvent, stageCompare } from '../finance/journey.ts'
+import { noteNextStep, prepareVisit, presentPath, recordEvent, stageCompare } from '../finance/journey.ts'
 
 export function followNext(decision: Decision) {
   if (decision.ctaTarget === 'financing') {
@@ -10,7 +10,8 @@ export function followNext(decision: Decision) {
     return
   }
   noteNextStep(decision.next.title)
-  openOverlay('move')
+  prepareVisit(`${decision.next.title}. ${decision.reason}`, decision.questions.join('\n'))
+  openOverlay('visit')
 }
 
 export function openStagedCompare() {

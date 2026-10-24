@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --test src/finance/loan.test.ts src/finance/decide.test.ts src/finance/plan.test.ts src/finance/quote.test.ts",
+    "test": "node --test src/finance/loan.test.ts src/finance/decide.test.ts src/finance/plan.test.ts src/finance/quote.test.ts src/finance/explain.test.ts src/finance/funnel.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

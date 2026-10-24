@@ -11,7 +11,7 @@ import { QuoteExplainer } from './QuoteExplainer.tsx'
 export function FinancingPanel() {
   const { active, notice } = useScenario()
   const vehicle = vehicleById(active.vehicleId)
-  const { showCosts } = useJourney()
+  const { showCosts, highlight } = useJourney()
   const quote = useMemo(() => buildLoan(active.inputs), [active])
   const downMax = maxDownPayment(active.inputs)
   const input = active.inputs
@@ -113,7 +113,7 @@ export function FinancingPanel() {
           <dt>Amount financed</dt>
           <dd>{formatMoney(quote.financedCents)}</dd>
         </div>
-        <div>
+        <div className={highlight === 'interest' ? 'mark' : undefined}>
           <dt>Total interest</dt>
           <dd>{formatMoney(quote.totalInterestCents)}</dd>
         </div>
