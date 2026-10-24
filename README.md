@@ -1,10 +1,10 @@
 # What's Your Next Move?
 
-A small browser driving scene for a Toyota Financial Services customer decision. A racing-green hatchback with suspension you can feel, on a looping valley road at golden hour. Drive the asphalt, cut across the grass, or splash into the lake and get set back on the road.
+A browser driving scene for a Toyota Financial Services customer decision. It opens on a racing-green hatchback in Golden Valley. Choose Explore the car or Explore payments, then drive the loop or skip straight to the desk.
 
-Slow down at Home, the Dealer, or Service. Each stop explains that option with the payment, the total, and the assumptions. The brighter ring is the recommended next step. The numbers come from plain rules on synthetic data, with no API key.
+Maya Chen and Jordan Hale each load a contract into the same financing offer. Home, the Dealer, and Service use that live decision, and the brighter ring is the recommended next step. Changing the price, rate, term, budget, mileage, or priority recalculates it and says what changed. The numbers come from plain rules on synthetic data, with no API key. The interest field is a nominal annual rate, not an APR.
 
-Four more stops sit on the same loop. Drive into the ring and choose Open, or use Financing, Timeline, Explore, and Compare. Those buttons drive the car along the road, and Skip travel opens the same screen. Financing, the ownership timeline, and compare all use one illustrative loan schedule. The interest field is a nominal annual rate, not an APR.
+Financing, Timeline, Explore, and Compare sit on the same loop. Plan holds budget, ownership costs, a buy-versus-lease horizon, trade equity, and an explicitly uncertain savings path. Ask explains the figures already on screen. The garage saves scenarios, and Prepare my visit writes a summary you can edit. Test-drive, appraisal, financing, and service requests stay on this device, including a simulated failure. Export prints the comparison. Business view lists the session events.
 
 ## Demo
 

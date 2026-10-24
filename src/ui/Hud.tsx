@@ -14,6 +14,7 @@ import { loadCustomer, useJourney } from '../finance/journey.ts'
 import { HINT_RADIUS, nearestStop, OPEN_RADIUS, OPEN_SPEED_KMH, type RoadStop } from '../finance/stops.ts'
 import { drive, setTouch, telemetry, toggleMute, type HeldControl } from '../input/controls.ts'
 import { ComparePanel } from './ComparePanel.tsx'
+import { Entry } from './Entry.tsx'
 import { ExplorePanel } from './ExplorePanel.tsx'
 import { FinancingPanel } from './FinancingPanel.tsx'
 import { AssistPanel } from './AssistPanel.tsx'
@@ -94,6 +95,8 @@ export function Hud() {
   const traveling = experience.mode === 'guided' && experience.travelFeature
   const place = traveling ? FEATURES[experience.travelFeature!].place : ''
   const nearbyName = nearbyFeature.id === 'financing' ? 'Cost Studio' : nearbyFeature.place
+
+  if (!experience.entered) return <Entry />
 
   return (
     <div className={locked ? 'hud driving-locked' : 'hud'}>

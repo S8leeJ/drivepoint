@@ -35,6 +35,7 @@ type SessionSnapshot = {
   narrow: boolean
   travelFeature: FeatureId | null
   overlay: OverlayId | null
+  entered: boolean
 }
 
 const listeners = new Set<() => void>()
@@ -50,6 +51,7 @@ export const session = {
   reducedMotion: false,
   narrow: false,
   overlay: null as OverlayId | null,
+  entered: false,
 }
 
 let snapshot: SessionSnapshot = toSnapshot()
@@ -64,11 +66,12 @@ function toSnapshot(): SessionSnapshot {
     narrow: session.narrow,
     travelFeature: session.travel?.feature ?? null,
     overlay: session.overlay,
+    entered: session.entered,
   }
 }
 
 function syncBlock() {
-  if (session.overlay) drive.block = 'locked'
+  if (!session.entered || session.overlay) drive.block = 'locked'
   else drive.block = session.mode === 'manual' ? 'manual' : session.mode === 'guided' ? 'guided' : 'locked'
 }
 
@@ -187,6 +190,15 @@ export function closeFeature() {
   cameraSnap.current = true
   clearHeldInputs()
   emit()
+}
+
+export function begin(choice: 'car' | 'payments') {
+  session.entered = true
+  if (choice === 'car') {
+    openFeature('explore')
+    return
+  }
+  openOverlay('move')
 }
 
 export function openOverlay(id: OverlayId) {
