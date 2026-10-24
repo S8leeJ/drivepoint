@@ -365,10 +365,10 @@ export function Car() {
       cameraSnap.current = true
     }
 
-    const steerMax = 0.46 + (0.15 - 0.46) * Math.min(Math.abs(speed) / 30, 1)
+    const steerMax = 0.52 + (0.3 - 0.52) * Math.min(Math.abs(speed) / 48, 1)
     const steerTarget = steerMax * ((drive.left ? 1 : 0) - (drive.right ? 1 : 0))
     const currentSteer = vehicle.wheelSteering(0) ?? 0
-    const steer = currentSteer + (steerTarget - currentSteer) * Math.min(1, dt * 8)
+    const steer = currentSteer + (steerTarget - currentSteer) * Math.min(1, dt * 18)
     vehicle.setWheelSteering(0, steer)
     vehicle.setWheelSteering(1, steer)
 

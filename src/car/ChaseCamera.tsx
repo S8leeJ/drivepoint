@@ -32,7 +32,7 @@ export function ChaseCamera({ target }: ChaseCameraProps) {
     forward.set(0, 0, 1).applyQuaternion(quat)
 
     const speed = Math.abs(telemetry.speedMs)
-    lookAt.copy(position).addScaledVector(forward, 2.6 + Math.min(speed, 28) * 0.09)
+    lookAt.copy(position).addScaledVector(forward, 2.6 + Math.min(speed, 46) * 0.09)
     lookAt.y += 0.82
 
     desired.copy(position).addScaledVector(forward, -6.5)
@@ -67,7 +67,7 @@ export function ChaseCamera({ target }: ChaseCameraProps) {
     view.position.copy(smoothed.current)
     view.lookAt(look.current)
 
-    const fov = 50 + Math.min(speed, 34) * 0.38
+    const fov = 50 + Math.min(speed, 52) * 0.38
     view.fov += (fov - view.fov) * Math.min(1, delta * 2.4)
     view.updateProjectionMatrix()
   })
