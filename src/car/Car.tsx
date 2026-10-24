@@ -16,6 +16,7 @@ import { getLiveScenario, useScenario } from '../finance/scenario.ts'
 import { paintById, vehicleById, type Paint, type VehicleSpec } from '../finance/vehicles.ts'
 import { cameraSnap, drive, telemetry } from '../input/controls.ts'
 import { getSpawn } from '../world/terrain.ts'
+import { CostBars } from './CostBars.tsx'
 import { CameraDirector } from './FeatureCamera.tsx'
 import { usePreparedCar } from './prepare.ts'
 import { BRAKE_FORCE, CHASSIS_MASS, CONNECTION_Y, ENGINE_FORCE, HANDBRAKE_FORCE, REST_LENGTH, REVERSE_SPEED, TOP_SPEED, WHEEL_RADIUS } from './spec.ts'
@@ -331,6 +332,7 @@ export function Car({ vehicle, paint, initial }: CarProps) {
           {parts.wheels.map((wheel) => (
             <primitive key={wheel.name} object={wheel} />
           ))}
+          <CostBars />
         </group>
       </RigidBody>
       <CameraDirector target={visual} />

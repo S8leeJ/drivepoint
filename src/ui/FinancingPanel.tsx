@@ -1,15 +1,17 @@
 import { useMemo } from 'react'
 import { closeFeature, requestFeature } from '../experience/session.ts'
-import { restoreOffer } from '../finance/journey.ts'
+import { restoreOffer, setShowCosts, useJourney } from '../finance/journey.ts'
 import { buildLoan, formatMoney, formatRate, maxDownPayment } from '../finance/loan.ts'
 import { addActiveToCompare, clearNotice, setInputs, useScenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
 import { DecisionStrip } from './DecisionStrip.tsx'
 import { Field } from './Fields.tsx'
+import { QuoteExplainer } from './QuoteExplainer.tsx'
 
 export function FinancingPanel() {
   const { active, notice } = useScenario()
   const vehicle = vehicleById(active.vehicleId)
+  const { showCosts } = useJourney()
   const quote = useMemo(() => buildLoan(active.inputs), [active])
   const downMax = maxDownPayment(active.inputs)
   const input = active.inputs
@@ -124,6 +126,41 @@ export function FinancingPanel() {
           <dd>{formatMoney(quote.upfrontCents)}</dd>
         </div>
       </dl>
+      <button type="button" className={showCosts ? 'customer on' : 'ghost'} onClick={() => setShowCosts(!showCosts)}>
+        {showCosts ? 'Hide where the money goes' : 'Show where the money goes'}
+      </button>
+      {showCosts && (
+        <table className="cost-table">
+          <caption>Where the money goes</caption>
+          <tbody>
+            <tr>
+              <th scope="row">Vehicle price</th>
+              <td>{formatMoney(quote.priceCents)}</td>
+            </tr>
+            <tr>
+              <th scope="row">Taxes</th>
+              <td>{formatMoney(quote.taxCents)}</td>
+            </tr>
+            <tr>
+              <th scope="row">Fees</th>
+              <td>{formatMoney(quote.feesCents)}</td>
+            </tr>
+            <tr>
+              <th scope="row">Interest</th>
+              <td>{formatMoney(quote.totalInterestCents)}</td>
+            </tr>
+            <tr>
+              <th scope="row">Amount financed</th>
+              <td>{formatMoney(quote.financedCents)}</td>
+            </tr>
+            <tr>
+              <th scope="row">Upfront cash</th>
+              <td>{formatMoney(quote.upfrontCents)}</td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+      <QuoteExplainer />
       <div className="panel-actions">
         <button type="button" className="cta" onClick={addActiveToCompare}>
           Add to compare

@@ -46,6 +46,7 @@ type JourneyState = {
   energy: EnergyAssumptions
   savings: SavingsPlan
   noted: boolean
+  showCosts: boolean
   events: SessionEvent[]
 }
 
@@ -65,6 +66,7 @@ let state: JourneyState = {
   energy: { mpg: 32, gallonPrice: 3.4 },
   savings: { monthly: 200, months: 18, futurePrice: 30000, futureRate: 6.5 },
   noted: false,
+  showCosts: false,
   events: [],
 }
 
@@ -227,6 +229,13 @@ export function setTrade(patch: Partial<TradeTerms>) {
 
 export function setEnergy(patch: Partial<EnergyAssumptions>) {
   state = { ...state, energy: { ...state.energy, ...patch } }
+  emit()
+}
+
+export function setShowCosts(showCosts: boolean) {
+  if (state.showCosts === showCosts) return
+  state = { ...state, showCosts }
+  remember(showCosts ? 'Showed where the money goes' : 'Hid the cost breakdown', '')
   emit()
 }
 
