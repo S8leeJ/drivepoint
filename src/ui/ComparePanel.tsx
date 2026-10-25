@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { closeFeature, requestFeature, setCompareFocus, useSession } from '../experience/session.ts'
+import { customerById } from '../finance/customers.ts'
+import { useJourney } from '../finance/journey.ts'
 import { buildLoan, compareTradeoff, formatMoney, formatRate, maxDownPayment, type LoanInputs, type LoanQuote } from '../finance/loan.ts'
 import { continueWith, replaceCompare, updateCompare, useScenario, type Scenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
@@ -89,11 +91,15 @@ export function ComparePanel() {
 }
 
 function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Scenario | null; quote: LoanQuote | null }) {
+  const journey = useJourney()
   const label = slot === 'a' ? 'A' : 'B'
+  const listed = Boolean(journey.listing) && journey.offerKind === 'replacement'
+  const eyebrow = listed ? (slot === 'a' ? 'Contract on file' : 'This listing') : `Scenario ${label}`
+  const customer = journey.customerId ? customerById(journey.customerId) : null
   if (!scenario || !quote) {
     return (
       <section className="scenario-card" aria-label={`Scenario ${label}`}>
-        <p className="eyebrow">Scenario {label}</p>
+        <p className="eyebrow">{eyebrow}</p>
         <h3>Empty bay</h3>
         <p>Save the current financing scenario into this bay.</p>
         <button type="button" className="ghost" onClick={() => replaceCompare(slot)}>
@@ -103,12 +109,20 @@ function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Sc
     )
   }
   const vehicle = vehicleById(scenario.vehicleId)
+  const title = listed && slot === 'b' && journey.listing
+    ? journey.listing.title
+    : listed && slot === 'a' && customer
+      ? customer.vehicle
+      : vehicle.name
   const input = scenario.inputs
   const patch = (next: Partial<LoanInputs>) => updateCompare(slot, next)
   return (
     <section className="scenario-card" aria-label={`Scenario ${label}`}>
-      <p className="eyebrow">Scenario {label}</p>
-      <h3>{vehicle.name}</h3>
+      <p className="eyebrow">{eyebrow}</p>
+      <h3>{title}</h3>
+      {slot === 'b' && journey.listing?.link && (
+        <p><a className="text-button" href={journey.listing.link} target="_blank" rel="noreferrer">View listing</a></p>
+      )}
       <p className="payment small">{formatMoney(quote.monthlyCents)}<span>/ month</span></p>
       <dl className="figures">
         <div>

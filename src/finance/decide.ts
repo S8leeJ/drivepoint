@@ -40,6 +40,11 @@ export type TradeTerms = {
   termMonths: number
 }
 
+export type MarketFact = {
+  value: number | null
+  note: string | null
+}
+
 export type DecisionInput = {
   customer: Customer | null
   offerKind: OfferKind
@@ -51,6 +56,8 @@ export type DecisionInput = {
   trade: TradeTerms
   contractKind: OfferKind | null
   contractOffer: LoanInputs | null
+  market: MarketFact | null
+  confirm: string | null
 }
 
 export type MoneyPath = {
@@ -187,12 +194,20 @@ export function baselineInput(customer: Customer): DecisionInput {
     trade: baselineTrade(customer),
     contractKind: null,
     contractOffer: null,
+    market: null,
+    confirm: null,
   }
 }
 
 function cents(dollars: number) {
   if (!Number.isFinite(dollars)) return 0
   return Math.round(dollars * 100)
+}
+
+function marketDollars(input: DecisionInput, customer: Customer) {
+  const live = input.market?.value
+  if (live != null && Number.isFinite(live)) return live
+  return customer.marketValue
 }
 
 function miles(value: number) {
@@ -278,7 +293,7 @@ function buildKeep(input: DecisionInput, customer: Customer): MoneyPath {
     displayCents: monthlyCents,
     cadence: 'month',
     termMonths: customer.monthsLeft,
-    equityCents: cents(customer.marketValue - customer.balance),
+    equityCents: cents(marketDollars(input, customer) - customer.balance),
     sameCar: true,
     assumptions: [
       `Balance ${money(cents(customer.balance))} at ${formatRate(ratePercent(customer.apr))}`,
@@ -331,11 +346,12 @@ function refinanceInputs(input: DecisionInput, customer: Customer): LoanInputs |
 function buildBuyout(input: DecisionInput, customer: Customer): MoneyPath | null {
   const inputs = buyoutInputs(input, customer)
   if (!inputs) return null
-  const equityCents = cents(customer.marketValue) - cents(inputs.price)
+  const value = marketDollars(input, customer)
+  const equityCents = cents(value) - cents(inputs.price)
   const quote = buildLoan(inputs)
   const equityLine = equityCents >= 0
     ? `the car is worth ${money(equityCents)} more than the ${money(cents(inputs.price))} buyout`
-    : `the ${money(cents(inputs.price))} price is ${money(Math.abs(equityCents))} more than the car's ${money(cents(customer.marketValue))} value`
+    : `the ${money(cents(inputs.price))} price is ${money(Math.abs(equityCents))} more than the car's ${money(cents(value))} value`
   const line = `The buyout is ${money(quote.monthlyCents)} a month for ${inputs.termMonths} months, ${money(quote.totalPaymentsCents + quote.upfrontCents)} in all, and ${equityLine}.`
   return loanOffer(
     inputs,
@@ -345,7 +361,7 @@ function buildBuyout(input: DecisionInput, customer: Customer): MoneyPath | null
     line,
     [
       `Buyout price ${money(cents(inputs.price))} at ${formatRate(inputs.annualRate)} for ${inputs.termMonths} months`,
-      `Market value ${money(cents(customer.marketValue))}`,
+      `Market value ${money(cents(value))}`,
       `Budget ${money(cents(input.preferences.budget))}`,
     ],
     true,
@@ -371,7 +387,7 @@ function buildRefinance(input: DecisionInput, customer: Customer, keep: MoneyPat
       `Budget ${money(cents(input.preferences.budget))}`,
     ],
     true,
-    cents(customer.marketValue - customer.balance),
+    cents(marketDollars(input, customer) - customer.balance),
   )
 }
 
@@ -543,6 +559,7 @@ function questionsFor(input: DecisionInput, overBudget: boolean) {
   if (input.offer.fees === 0) questions.push('Dealer fees are not in the open offer.')
   if (overBudget) questions.push('Ownership costs put a full month over the budget. Confirm insurance, energy, and maintenance.')
   if (input.customer?.contract === 'lease') questions.push('Mileage and the disposition fee assume the car comes back in ordinary condition.')
+  if (input.confirm) questions.push(input.confirm)
   return questions
 }
 
@@ -607,6 +624,7 @@ function score(input: DecisionInput): Decision {
   }
   const assumptions = [
     ...next.assumptions,
+    ...(input.market?.note ? [input.market.note] : []),
     `Priority: ${priorityLabel(input.preferences.priority)}`,
     `Budget ${money(budgetCents)} a month`,
   ]
@@ -734,6 +752,9 @@ function differenceClause(base: DecisionInput, input: DecisionInput) {
   const baseOwn = ownershipMonthly(base.ownership)
   if (own !== baseOwn) parts.push('monthly ownership costs changed')
   if (input.lease.payment !== base.lease.payment) parts.push('the lease offer changed')
+  if (input.market?.value != null && input.customer && input.market.value !== input.customer.marketValue) {
+    parts.push(`the market value is ${money(cents(input.market.value))} instead of ${money(cents(input.customer.marketValue))}`)
+  }
   if (input.trade.price !== base.trade.price || input.trade.value !== base.trade.value || input.trade.payoff !== base.trade.payoff) parts.push('the trade-in changed')
   if (parts.length === 0) parts.push('the offer changed')
   return parts.join(', ')

@@ -1,7 +1,7 @@
 import { closeFeature, requestFeature } from '../experience/session.ts'
-import { shopVehicle } from '../finance/journey.ts'
+import { clearListing, getJourney, shopVehicle } from '../finance/journey.ts'
 import { formatMoney } from '../finance/loan.ts'
-import { addActiveToCompare, chooseVehicle, setColor, useScenario } from '../finance/scenario.ts'
+import { addActiveToCompare, chooseVehicle, setColor, setInputs, useScenario } from '../finance/scenario.ts'
 import { PAINTS, VEHICLES, vehicleById, type PaintId } from '../finance/vehicles.ts'
 import { DecisionStrip } from './DecisionStrip.tsx'
 
@@ -32,8 +32,11 @@ export function ExplorePanel() {
             className={option.id === active.vehicleId ? 'customer on' : 'customer'}
             aria-pressed={option.id === active.vehicleId}
             onClick={() => {
+              const relist = getJourney().listing != null && option.id === active.vehicleId
               shopVehicle()
+              clearListing()
               chooseVehicle(option.id)
+              if (relist) setInputs({ price: option.price })
             }}
           >
             {option.name}

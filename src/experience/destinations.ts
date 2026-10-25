@@ -1,6 +1,6 @@
 import { frameAt, LOOP_LENGTH, sampleHeight, type RoadFrame } from '../world/terrain.ts'
 
-export type FeatureId = 'financing' | 'timeline' | 'explore' | 'compare'
+export type FeatureId = 'financing' | 'timeline' | 'explore' | 'compare' | 'market'
 
 export type FeatureSite = {
   id: FeatureId
@@ -22,9 +22,10 @@ export const FEATURES: Record<FeatureId, FeatureSite> = {
   timeline: { id: 'timeline', label: 'Timeline', place: 'Ownership road', distance: TIMELINE_START, lateral: 0 },
   explore: { id: 'explore', label: 'Explore', place: 'Showroom', distance: 296, lateral: 4.6 },
   compare: { id: 'compare', label: 'Compare', place: 'Comparison bays', distance: 32, lateral: 0 },
+  market: { id: 'market', label: 'Market', place: 'Live lot', distance: 86, lateral: 8 },
 }
 
-export const FEATURE_ORDER: FeatureId[] = ['financing', 'timeline', 'explore', 'compare']
+export const FEATURE_ORDER: FeatureId[] = ['financing', 'timeline', 'explore', 'compare', 'market']
 
 export function wrapDistance(distance: number) {
   return ((distance % LOOP_LENGTH) + LOOP_LENGTH) % LOOP_LENGTH

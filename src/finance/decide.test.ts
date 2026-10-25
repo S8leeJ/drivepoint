@@ -85,6 +85,28 @@ test('ownership costs warn without hiding the buyout', () => {
   assert.match(decision.changed ?? '', /over budget/)
 })
 
+test('a market median under the buyout drops Maya’s buyout', () => {
+  const note = 'Market value $25,000, median of 9 listings within 8,000 miles, Google Shopping, 6:41pm.'
+  const input = edit(baselineInput(customerById('maya')), {}, {
+    market: { value: 25000, note },
+  })
+  const decision = decide(input)
+  assert.equal(decision.next.id, 'keep')
+  assert.match(decision.assumptions.join('\n'), /Market value \$25,000, median of 9 listings within 8,000 miles/)
+  assert.match(decision.changed ?? '', /Buy out/)
+  assert.match(decision.changed ?? '', /\$25,000/)
+})
+
+test('a market median above the buyout keeps Maya’s buyout', () => {
+  const note = 'Market value $27,400, median of 4 listings within 8,000 miles, Google Shopping, 6:41pm.'
+  const decision = decide(edit(baselineInput(customerById('maya')), {}, {
+    market: { value: 27400, note },
+  }))
+  assert.equal(decision.next.id, 'buyout')
+  assert.ok(decision.next.equityCents > 0)
+  assert.match(decision.assumptions.join('\n'), /Market value \$27,400, median of 4 listings/)
+})
+
 test('energy and savings helpers stay non-negative', () => {
   assert.ok(monthlyEnergy(12000, 30, 3.5) > 0)
   assert.equal(monthlyEnergy(12000, 0, 3.5), 0)

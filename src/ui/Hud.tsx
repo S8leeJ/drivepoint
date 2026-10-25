@@ -10,7 +10,11 @@ import {
 } from '../experience/destinations.ts'
 import { openFeature, requestFeature, skipTravel, travelProgress, useSession, cancelTravel, backToDrive, openOverlay } from '../experience/session.ts'
 import { CUSTOMERS } from '../finance/customers.ts'
-import { loadCustomer, useJourney } from '../finance/journey.ts'
+import { getJourney, loadCustomer, useJourney } from '../finance/journey.ts'
+import { getMarketSnapshot } from '../finance/liveMarket.ts'
+import { formatMoney } from '../finance/loan.ts'
+import { captionFor, topInBudget } from '../finance/market.ts'
+import { getLiveScenario } from '../finance/scenario.ts'
 import { HINT_RADIUS, nearestStop, OPEN_RADIUS, OPEN_SPEED_KMH, type RoadStop } from '../finance/stops.ts'
 import { drive, setTouch, telemetry, toggleMute, type HeldControl } from '../input/controls.ts'
 import { ComparePanel } from './ComparePanel.tsx'
@@ -23,8 +27,21 @@ import { GaragePanel } from './GaragePanel.tsx'
 import { MovePanel } from './MovePanel.tsx'
 import { PlanPanel } from './PlanPanel.tsx'
 import { VisitPanel } from './VisitPanel.tsx'
+import { MarketPanel } from './MarketPanel.tsx'
 import { NextMove } from './NextMove.tsx'
 import { TimelinePanel } from './TimelinePanel.tsx'
+
+function approachHint(feature: (typeof FEATURES)[keyof typeof FEATURES]) {
+  if (feature.id !== 'market') return `${feature.place} ahead — slow down to open`
+  const snap = getMarketSnapshot()
+  const journey = getJourney()
+  if (!snap || !journey.customerId) return `${feature.place} ahead — slow down to open`
+  const offer = getLiveScenario().active.inputs
+  const customer = CUSTOMERS.find((person) => person.id === journey.customerId)
+  const top = customer ? topInBudget(snap.listings, offer, journey.preferences.budget, customer.miles) : null
+  if (!top) return `${feature.place} ahead — slow down to open`
+  return `${top.title} · ${formatMoney(top.monthlyCents)} — slow down to open`
+}
 
 function Pedal({ control, label }: { control: HeldControl; label: string }) {
   return (
@@ -82,9 +99,10 @@ export function Hud() {
       const featureHint = !featureArrived && nearFeature.distance <= FEATURE_HINT_RADIUS
       const stopHint = !stopArrived && nearStop.distance <= HINT_RADIUS
       if (featureHint && (!stopHint || nearFeature.distance < nearStop.distance)) {
-        setHint(`${nearFeature.feature.place} ahead — slow down to open`)
+        setHint(approachHint(nearFeature.feature))
       } else if (stopHint) {
-        setHint(`${nearStop.stop.label} ahead — slow down`)
+        const label = captionFor(nearStop.stop.id, nearStop.stop.label, getMarketSnapshot())
+        setHint(`${label} ahead — slow down`)
       } else {
         setHint(null)
       }
@@ -208,6 +226,7 @@ export function Hud() {
       {experience.mode === 'timeline' && <TimelinePanel />}
       {experience.mode === 'feature' && experience.feature === 'explore' && <ExplorePanel />}
       {experience.mode === 'feature' && experience.feature === 'compare' && <ComparePanel />}
+      {experience.mode === 'feature' && experience.feature === 'market' && <MarketPanel />}
       {traveling && (
         <div className="travel-card" role="status">
           <p className="eyebrow">On the way</p>

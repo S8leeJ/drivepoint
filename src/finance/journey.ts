@@ -20,8 +20,11 @@ import {
   type Priority,
   type TradeTerms,
 } from './decide.ts'
+import { bindMarketDelivery, getMarketSnapshot, getMarketZip, marketArmed, requestMarket } from './liveMarket.ts'
+import { formatMoney } from './loan.ts'
+import { confirmQuestion, marketNote, topInBudget, type Listing, type MarketSnapshot } from './market.ts'
 import { equityAdjustment } from './plan.ts'
-import { applyScenario, getLiveScenario, setComparePair, useScenario, type Scenario } from './scenario.ts'
+import { applyScenario, chooseVehicle, getLiveScenario, setComparePair, useScenario, type Scenario } from './scenario.ts'
 import { vehicleById } from './vehicles.ts'
 
 export type EnergyAssumptions = { mpg: number; gallonPrice: number }
@@ -76,6 +79,9 @@ type JourneyState = {
   checks: Record<string, boolean>
   garage: SavedBay[]
   events: SessionEvent[]
+  market: DecisionInput['market']
+  confirm: string | null
+  listing: Listing | null
 }
 
 const listeners = new Set<() => void>()
@@ -103,6 +109,9 @@ let state: JourneyState = {
   checks: Object.fromEntries(CHECKLIST.map(([id]) => [id, false])),
   garage: [],
   events: [],
+  market: null,
+  confirm: null,
+  listing: null,
 }
 
 let snapshot: JourneyState = state
@@ -118,6 +127,8 @@ function emit() {
     savings: { ...state.savings },
     contractOffer: state.contractOffer ? { ...state.contractOffer } : null,
     events: state.events.slice(),
+    market: state.market ? { ...state.market } : null,
+    listing: state.listing ? { ...state.listing } : null,
   }
   listeners.forEach((listener) => listener())
 }
@@ -156,38 +167,44 @@ function liveVehicle() {
 }
 
 export function loadCustomer(id: Customer['id']) {
-  if (state.customerId === id) return
-  const customer = customerById(id)
-  const offer = baselineOffer(customer)
-  state = {
-    ...state,
-    customerId: id,
-    offerKind: offer.kind,
-    contractKind: null,
-    contractOffer: null,
-    preferences: baselinePreferences(customer),
-    ownership: emptyOwnership(),
-    lease: baselineLease(customer),
-    trade: baselineTrade(customer),
-    noted: false,
-    visitSummary: '',
-    visitQuestions: '',
-    visitStatus: 'idle',
-    requestKind: null,
+  if (state.customerId !== id) {
+    const customer = customerById(id)
+    const offer = baselineOffer(customer)
+    state = {
+      ...state,
+      customerId: id,
+      offerKind: offer.kind,
+      contractKind: null,
+      contractOffer: null,
+      preferences: baselinePreferences(customer),
+      ownership: emptyOwnership(),
+      lease: baselineLease(customer),
+      trade: baselineTrade(customer),
+      noted: false,
+      visitSummary: '',
+      visitQuestions: '',
+      visitStatus: 'idle',
+      requestKind: null,
+      market: null,
+      confirm: null,
+      listing: null,
+    }
+    remember('Chose a customer', customer.name)
+    applyScenario(
+      { ...liveVehicle(), inputs: offer.inputs },
+      `${customer.name}'s starting ${offer.kind === 'buyout' ? 'buyout' : 'refinance'} offer is loaded. The car in the valley stays the one you are driving.`,
+    )
+    emit()
   }
-  remember('Chose a customer', customer.name)
-  applyScenario(
-    { ...liveVehicle(), inputs: offer.inputs },
-    `${customer.name}'s starting ${offer.kind === 'buyout' ? 'buyout' : 'refinance'} offer is loaded. The car in the valley stays the one you are driving.`,
-  )
-  emit()
+  if (marketArmed()) refreshMarket()
 }
 
 export function restoreOffer() {
   if (!state.customerId) return
   const customer = customerById(state.customerId)
   const offer = baselineOffer(customer)
-  state = { ...state, offerKind: offer.kind, contractKind: null, contractOffer: null, noted: false }
+  state = { ...state, offerKind: offer.kind, contractKind: null, contractOffer: null, noted: false, listing: null }
+  state = { ...state, confirm: confirmFromSnapshot(getMarketSnapshot()) }
   remember('Restored the starting offer', customer.name)
   applyScenario(
     { ...liveVehicle(), inputs: offer.inputs },
@@ -378,13 +395,23 @@ export function toggleCheck(id: string) {
 }
 
 export function prepareVisit(summary: string, questions: string) {
+  const decision = currentDecision()
+  const place = decision.next.stop === 'dealer'
+    ? getMarketSnapshot()?.dealer ?? null
+    : decision.next.stop === 'service'
+      ? getMarketSnapshot()?.serviceShop ?? null
+      : null
+  const line = place
+    ? `${place.name}${place.address ? `, ${place.address}` : ''}. ${place.hours ?? 'Hours unavailable'}. ${place.mapsUrl}`
+    : ''
+  const visitSummary = line && !summary.includes(line) ? `${summary}\n\n${line}` : summary
   state = {
     ...state,
-    visitSummary: summary,
+    visitSummary,
     visitQuestions: questions,
     visitStatus: 'prepared',
   }
-  remember('Prepared a visit', 'Summary is ready to edit')
+  remember('Prepared a visit', place ? place.name : 'Summary is ready to edit')
   emit()
 }
 
@@ -411,13 +438,107 @@ export function decisionInput(journey: JourneyState, offer: DecisionInput['offer
     trade: journey.trade,
     contractKind: journey.contractKind,
     contractOffer: journey.contractOffer,
+    market: journey.market,
+    confirm: journey.confirm,
   }
+}
+
+function offerName(journey: JourneyState = state) {
+  const active = getLiveScenario().active
+  if (journey.listing && journey.offerKind === 'replacement') return journey.listing.title
+  return vehicleById(active.vehicleId).name
+}
+
+function currentDecision() {
+  const active = getLiveScenario().active
+  return decide(decisionInput(state, active.inputs, offerName()))
+}
+
+function confirmFromSnapshot(snapshot: MarketSnapshot | null) {
+  if (state.listing) return confirmQuestion(state.listing.source)
+  const customer = state.customerId ? customerById(state.customerId) : null
+  if (!snapshot || !customer) return null
+  const top = topInBudget(snapshot.listings, getLiveScenario().active.inputs, state.preferences.budget, customer.miles)
+  return top ? confirmQuestion(top.source) : null
+}
+
+export function refreshMarket() {
+  if (!marketArmed() || !state.customerId) return
+  const customer = customerById(state.customerId)
+  const active = getLiveScenario().active
+  requestMarket({
+    zip: getMarketZip(),
+    customerId: customer.id,
+    body: active.vehicleId,
+    offer: active.inputs,
+    budget: state.preferences.budget,
+  })
+}
+
+export function applyMarket(snapshot: MarketSnapshot | null) {
+  const customer = state.customerId ? customerById(state.customerId) : null
+  if (!snapshot || !customer) {
+    const trade = customer && state.market?.value != null && customer.contract === 'loan'
+      ? { ...state.trade, value: customer.marketValue }
+      : state.trade
+    const confirm = state.listing ? confirmQuestion(state.listing.source) : null
+    if (!state.market && state.confirm === confirm && trade.value === state.trade.value) return
+    state = { ...state, market: null, confirm, trade }
+    emit()
+    return
+  }
+  const before = currentDecision()
+  const note = marketNote(snapshot)
+  const fact = note ? { value: snapshot.sample === 'accepted' ? snapshot.marketValue : null, note } : null
+  const trade = customer.contract !== 'loan'
+    ? state.trade
+    : snapshot.marketValue != null
+      ? { ...state.trade, value: snapshot.marketValue }
+      : state.market?.value != null
+        ? { ...state.trade, value: customer.marketValue }
+        : state.trade
+  state = {
+    ...state,
+    market: fact,
+    trade,
+    confirm: confirmFromSnapshot(snapshot),
+  }
+  const after = currentDecision()
+  if (before.next.id !== after.next.id) {
+    remember('Market value changed the next step', after.changed ?? after.next.title)
+  }
+  emit()
+}
+
+export function clearListing() {
+  if (!state.listing) return
+  state = { ...state, listing: null }
+  state = { ...state, confirm: confirmFromSnapshot(getMarketSnapshot()) }
+  emit()
+}
+
+export function applyListing(listing: Listing) {
+  if (!listing.vehicleId || !state.customerId) return
+  shopVehicle()
+  chooseVehicle(listing.vehicleId)
+  const active = getLiveScenario().active
+  const vehicle = vehicleById(listing.vehicleId)
+  applyScenario(
+    { ...active, vehicleId: listing.vehicleId, inputs: { ...active.inputs, price: listing.price } },
+    `${listing.title} is the open offer at ${formatMoney(Math.round(listing.price * 100))}. The valley car stays the ${vehicle.name}.`,
+  )
+  state = { ...state, listing, confirm: confirmQuestion(listing.source) }
+  remember('Used a listing as the offer', listing.title)
+  emit()
 }
 
 export function useDecision() {
   const scenario = useScenario()
   const journey = useJourney()
-  return decide(decisionInput(journey, scenario.active.inputs, vehicleById(scenario.active.vehicleId).name))
+  const name = journey.listing && journey.offerKind === 'replacement'
+    ? journey.listing.title
+    : vehicleById(scenario.active.vehicleId).name
+  return decide(decisionInput(journey, scenario.active.inputs, name))
 }
 
 export function stageCompare() {
@@ -431,7 +552,9 @@ export function stageCompare() {
     setComparePair(
       { ...live, inputs: contractLoanInputs(customer) },
       live,
-      'Scenario A is the current loan. Scenario B is the offer you are editing.',
+      state.listing
+        ? 'Bay A is the contract on file. Bay B is this listing.'
+        : 'Scenario A is the current loan. Scenario B is the offer you are editing.',
     )
     return
   }
@@ -444,9 +567,13 @@ export function stageCompare() {
     setComparePair(
       { ...live, inputs: buyout },
       live,
-      'Scenario A is the buyout. Scenario B is the vehicle you are shopping.',
+      state.listing
+        ? 'Bay A is the contract on file. Bay B is this listing.'
+        : 'Scenario A is the buyout. Scenario B is the vehicle you are shopping.',
     )
     return
   }
   setComparePair(live, { ...live, inputs: { ...live.inputs } }, 'Both bays are the buyout. Change one side to compare.')
 }
+
+bindMarketDelivery((snapshot) => applyMarket(snapshot))

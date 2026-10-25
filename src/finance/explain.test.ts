@@ -1,8 +1,20 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { customerById } from './customers.ts'
-import { baselineInput, decide } from './decide.ts'
+import { baselineInput, decide, type DecisionInput } from './decide.ts'
 import { answerQuestion } from './explain.ts'
+
+function edit(input: DecisionInput, rest: Partial<DecisionInput> = {}): DecisionInput {
+  return {
+    ...input,
+    ...rest,
+    offer: input.offer,
+    preferences: rest.preferences ?? input.preferences,
+    ownership: rest.ownership ?? input.ownership,
+    lease: rest.lease ?? input.lease,
+    trade: rest.trade ?? input.trade,
+  }
+}
 
 test('why uses the decision, and interest offers to highlight it', () => {
   const decision = decide(baselineInput(customerById('maya')))
@@ -12,6 +24,16 @@ test('why uses the decision, and interest offers to highlight it', () => {
   const interest = answerQuestion('How much is interest?', decision)
   assert.equal(interest.action, 'interest')
   assert.match(interest.text, /not an APR/)
+})
+
+test('why answers from the market sentence when a listing median is on file', () => {
+  const note = 'Market value $25,000, median of 9 listings within 8,000 miles, Google Shopping, 6:41pm.'
+  const decision = decide(edit(baselineInput(customerById('maya')), {
+    market: { value: 25000, note },
+  }))
+  const why = answerQuestion('Why is this the next step?', decision)
+  assert.match(why.text, /median of 9 listings within 8,000 miles/)
+  assert.match(why.text, /Google Shopping/)
 })
 
 test('an unrelated question does not invent a new number', () => {

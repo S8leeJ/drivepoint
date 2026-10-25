@@ -11,7 +11,8 @@ import { QuoteExplainer } from './QuoteExplainer.tsx'
 export function FinancingPanel() {
   const { active, notice } = useScenario()
   const vehicle = vehicleById(active.vehicleId)
-  const { showCosts, highlight } = useJourney()
+  const { showCosts, highlight, listing, offerKind } = useJourney()
+  const titled = listing != null && offerKind === 'replacement'
   const quote = useMemo(() => buildLoan(active.inputs), [active])
   const downMax = maxDownPayment(active.inputs)
   const input = active.inputs
@@ -21,14 +22,24 @@ export function FinancingPanel() {
       <div className="panel-head">
         <div>
           <p className="eyebrow">Illustrative financing</p>
-          <h2>{vehicle.name}</h2>
+          <h2>{titled ? listing.title : vehicle.name}</h2>
         </div>
         <button type="button" className="text-button" onClick={closeFeature}>
           Back to driving
         </button>
       </div>
       <DecisionStrip />
-      <p className="fine">Illustrative example. Not a credit offer or a Toyota Financial Services quote. Editing these fields updates the next move.</p>
+      <p className="fine">
+        {titled
+          ? `${vehicle.name} in the valley. Illustrative example, not a credit offer.`
+          : 'Illustrative example. Not a credit offer or a Toyota Financial Services quote. Editing these fields updates the next move.'}
+        {titled && listing.link && (
+          <>
+            {' '}
+            <a className="text-button" href={listing.link} target="_blank" rel="noreferrer">View listing</a>
+          </>
+        )}
+      </p>
       {notice && (
         <p className="note strong">
           {notice}{' '}

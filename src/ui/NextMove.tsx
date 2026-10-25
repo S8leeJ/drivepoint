@@ -1,17 +1,22 @@
 import type { StopId } from '../finance/decide.ts'
 import { formatMoney } from '../finance/loan.ts'
 import { useDecision } from '../finance/journey.ts'
+import { useMarket } from '../finance/liveMarket.ts'
+import { captionFor } from '../finance/market.ts'
 import { openOverlay } from '../experience/session.ts'
 import { followNext } from './actions.ts'
 
 export function NextMove({ stopId }: { stopId: StopId }) {
   const decision = useDecision()
+  const market = useMarket()
   const path = decision.stops[stopId]
   const strongest = path.id === decision.next.id
+  const fallback = stopId === 'home' ? 'Home' : stopId === 'dealer' ? 'Dealer' : 'Service'
+  const eyebrow = captionFor(stopId, fallback, market.snapshot)
 
   return (
     <aside className="next-move">
-      <p className="eyebrow">{stopId === 'home' ? 'Home' : stopId === 'dealer' ? 'Dealer' : 'Service'}</p>
+      <p className="eyebrow">{eyebrow}</p>
       <h2>{path.title}</h2>
       <p className={strongest ? 'note strong' : 'note'}>{path.because}</p>
       <p>{path.summary}</p>

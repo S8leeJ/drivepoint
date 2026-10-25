@@ -217,6 +217,21 @@ function Bay({
   )
 }
 
+function Lot() {
+  const site = shoulder(FEATURES.market.distance, 8)
+  const yaw = Math.atan2(-site.frame.rightX, -site.frame.rightZ)
+  return (
+    <group position={[site.x, site.y, site.z]} rotation={[0, yaw, 0]}>
+      <mesh position={[0, 0.08, 0]} receiveShadow>
+        <boxGeometry args={[7.2, 0.16, 4.4]} />
+        <meshStandardMaterial color="#efe6d6" roughness={0.5} />
+      </mesh>
+      <pointLight position={[0, 2.4, 0]} color="#fff1d2" intensity={4} distance={12} decay={2} />
+      <PlaceLabel text="Lot" position={[0, 2.6, 0]} />
+    </group>
+  )
+}
+
 function CompareYard() {
   const { compareA, compareB } = useScenario()
   const bays = compareBays()
@@ -237,6 +252,7 @@ export function FeatureSites() {
       ))}
       <Pavilion />
       <Showroom />
+      <Lot />
       <TimelineRoad />
       <CompareYard />
     </group>
