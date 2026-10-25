@@ -15,26 +15,32 @@ export function MovePanel() {
   const decision = useDecision()
   const { customerId, noted } = useJourney()
   const next = decision.next
-  const notedThis = noted && decision.ctaTarget === 'note'
+  const visitReady = noted && decision.ctaTarget === 'note'
   const person = customerId ? customerById(customerId) : null
   const paymentOverBudget = next.cadence === 'month' && next.displayCents > decision.budgetCents
+  const turnIn = decision.alternatives.find((path) => path.id === 'keep' && !path.sameCar)
+  const ctaLabel = visitReady
+    ? 'Review the visit'
+    : paymentOverBudget && decision.ctaTarget === 'financing'
+      ? 'Review this offer'
+      : decision.cta
 
   return (
     <aside className="feature-panel home-sheet" aria-label="My next move">
       <p className="eyebrow">Your next move</p>
-      {person && (
-        <details className="profile-disclosure">
-          <summary>{person.name} · {person.vehicle} · {person.contract}</summary>
-          <p className="fine">Try another example:</p>
-          <div className="choice-row" role="group" aria-label="Example situation">
-            {CUSTOMERS.map((option) => (
-              <button key={option.id} type="button" className={option.id === customerId ? 'customer on' : 'customer'} onClick={() => loadCustomer(option.id)}>
-                {option.contract === 'lease' ? 'Lease ending' : 'Loan in progress'}
-              </button>
-            ))}
-          </div>
-        </details>
-      )}
+      <div className="choice-row example-switch" role="group" aria-label="Example situation">
+        {CUSTOMERS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className={option.id === customerId ? 'customer on' : 'customer'}
+            aria-pressed={option.id === customerId}
+            onClick={() => loadCustomer(option.id)}
+          >
+            {option.name}
+          </button>
+        ))}
+      </div>
       <div className="answer-hero">
         <p className="eyebrow">{paymentOverBudget ? 'No monthly option fits this budget' : 'Recommended for this example'}</p>
         <h2>{next.title}</h2>
@@ -42,18 +48,21 @@ export function MovePanel() {
           {formatMoney(next.displayCents)}
           <span>{next.cadence === 'month' ? '/ month' : ' one time'}</span>
         </p>
-        <p className="answer-context">For {person ? `${person.name}’s ${person.contract}` : 'this example'}, with a {formatMoney(decision.budgetCents)} monthly budget.</p>
+        <p className="answer-context">{next.line}</p>
+        {turnIn && (
+          <p className="fine">Turning it in costs {formatMoney(turnIn.totalCents)}, including extra miles and a disposition fee.</p>
+        )}
+        {person && <p className="fine">Monthly budget {formatMoney(decision.budgetCents)}.</p>}
         {paymentOverBudget && <p className="budget-alert">This payment is {formatMoney(next.displayCents - decision.budgetCents)} over budget. Review other options before choosing.</p>}
         {!paymentOverBudget && decision.overBudget && <p className="budget-alert">With ownership costs, this is above budget. Review the costs before deciding.</p>}
       </div>
-      <button type="button" className="cta" disabled={notedThis} onClick={() => followNext(decision)}>
-        {notedThis ? 'Saved for this session' : paymentOverBudget ? 'Review this offer' : decision.cta} <span aria-hidden="true">→</span>
+      <button type="button" className="cta" onClick={() => followNext(decision)}>
+        {ctaLabel} <span aria-hidden="true">→</span>
       </button>
       <button type="button" className="quiet-action" onClick={() => openOverlay('plan')}>Change my budget or details</button>
 
       <details className="progressive-detail">
         <summary>Why this move?</summary>
-        <p>{next.line}</p>
         {decision.changed && <p className="note strong">{decision.changed}</p>}
         {decision.overBudget && <p>Including insurance, fuel, and upkeep: {formatMoney(decision.fullMonthlyCents)} a month.</p>}
         {next.cadence === 'month' && <p>Total on this path: {formatMoney(next.totalCents)}.</p>}
@@ -72,7 +81,11 @@ export function MovePanel() {
         <summary>See other options</summary>
         <ul className="path-list">
           {decision.alternatives.map((path) => (
-            <li key={path.id}><strong>{path.title}</strong><span>{optionMoney(path)}</span></li>
+            <li key={path.id}>
+              <strong>{path.title}</strong>
+              <span>{optionMoney(path)}</span>
+              <span>{path.line}</span>
+            </li>
           ))}
         </ul>
         <button type="button" className="ghost" onClick={openStagedCompare}>Compare two offers</button>

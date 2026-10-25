@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { AnswerLink } from './AnswerLink.tsx'
 import { deleteBay, renameBay, reopenBay, saveBay, useJourney } from '../finance/journey.ts'
 import { buildLoan, formatMoney } from '../finance/loan.ts'
-import { vehicleById } from '../finance/vehicles.ts'
 
 export function GaragePanel() {
   const { garage } = useJourney()
@@ -17,7 +16,7 @@ export function GaragePanel() {
         </div>
         <AnswerLink />
       </div>
-      <p className="fine">Each bay keeps the offer and the budget it was saved with. Reopening restores those inputs.</p>
+      <p className="fine">A saved scenario keeps the offer and the budget from the moment you saved it. Reopening restores those inputs.</p>
       <label className="field">
         <span>Name</span>
         <input type="text" value={name} aria-label="Scenario name" onChange={(event) => setName(event.target.value)} />
@@ -35,6 +34,7 @@ export function GaragePanel() {
       {garage.length === 0 && <p>No saved scenarios yet.</p>}
       {garage.map((bay) => {
         const quote = buildLoan(bay.scenario.inputs)
+        const kind = bay.offerKind === 'buyout' ? 'Buyout' : bay.offerKind === 'refinance' ? 'Refinance' : 'Another vehicle'
         return (
           <section key={bay.id} className="scenario-card">
             <label className="field">
@@ -47,7 +47,7 @@ export function GaragePanel() {
               />
             </label>
             <p>
-              {vehicleById(bay.scenario.vehicleId).name} · {formatMoney(quote.monthlyCents)} / month · {bay.offerKind}
+              {bay.label} · {formatMoney(quote.monthlyCents)} / month · {kind}
             </p>
             <div className="panel-actions">
               <button type="button" className="cta" onClick={() => reopenBay(bay.id)}>

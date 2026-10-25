@@ -62,6 +62,7 @@ function ArrivalRing({ distance }: { distance: number }) {
 }
 
 function Pavilion() {
+  const { feature } = useSession()
   const site = shoulder(FEATURES.financing.distance, 9)
   const yaw = Math.atan2(-site.frame.rightX, -site.frame.rightZ)
   return (
@@ -89,7 +90,7 @@ function Pavilion() {
         <meshStandardMaterial color="#edc294" roughness={0.8} />
       </mesh>
       <pointLight position={[0, 3.4, 0.2]} color="#ffd7a1" intensity={5} distance={16} decay={2} />
-      <PlaceLabel text="Cost Studio" position={[0, 5.1, 0]} />
+      {feature !== 'financing' && <PlaceLabel text="Cost Studio" position={[0, 5.1, 0]} />}
     </group>
   )
 }

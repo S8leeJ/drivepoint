@@ -24,8 +24,8 @@ import { bindMarketDelivery, getMarketSnapshot, getMarketZip, marketArmed, reque
 import { formatMoney } from './loan.ts'
 import { confirmQuestion, marketNote, topInBudget, type Listing, type MarketSnapshot } from './market.ts'
 import { equityAdjustment } from './plan.ts'
-import { applyScenario, chooseVehicle, getLiveScenario, setComparePair, useScenario, type Scenario } from './scenario.ts'
-import { vehicleById } from './vehicles.ts'
+import { applyScenario, chooseVehicle, clearCompare, getLiveScenario, setComparePair, useScenario, type Scenario } from './scenario.ts'
+import { vehicleById, type VehicleId } from './vehicles.ts'
 
 export type EnergyAssumptions = { mpg: number; gallonPrice: number }
 export type SavingsPlan = { monthly: number; months: number; futurePrice: number; futureRate: number }
@@ -33,6 +33,7 @@ export type SavingsPlan = { monthly: number; months: number; futurePrice: number
 export type SavedBay = {
   id: string
   name: string
+  label: string
   scenario: Scenario
   offerKind: OfferKind
   preferences: Preferences
@@ -188,8 +189,10 @@ export function loadCustomer(id: Customer['id']) {
       market: null,
       confirm: null,
       listing: null,
+      garage: [],
     }
     remember('Chose a customer', customer.name)
+    clearCompare()
     applyScenario(
       { ...liveVehicle(), inputs: offer.inputs },
       `${customer.name}'s sample ${offer.kind === 'buyout' ? 'buyout' : 'refinance'} is ready.`,
@@ -355,6 +358,7 @@ export function saveBay(name: string) {
   const bay: SavedBay = {
     id: `bay-${bayId}`,
     name: name.trim() || `Scenario ${bayId}`,
+    label: displayVehicleName(state, active.vehicleId),
     scenario: { vehicleId: active.vehicleId, colorId: active.colorId, inputs: { ...active.inputs } },
     offerKind: state.offerKind,
     preferences: { ...state.preferences },
@@ -443,10 +447,17 @@ export function decisionInput(journey: JourneyState, offer: DecisionInput['offer
   }
 }
 
-function offerName(journey: JourneyState = state) {
-  const active = getLiveScenario().active
+export function displayVehicleName(
+  journey: Pick<JourneyState, 'customerId' | 'offerKind' | 'listing'>,
+  vehicleId: VehicleId,
+) {
   if (journey.listing && journey.offerKind === 'replacement') return journey.listing.title
-  return vehicleById(active.vehicleId).name
+  if (journey.customerId && journey.offerKind !== 'replacement') return customerById(journey.customerId).vehicle
+  return vehicleById(vehicleId).name
+}
+
+function offerName(journey: JourneyState = state) {
+  return displayVehicleName(journey, getLiveScenario().active.vehicleId)
 }
 
 function currentDecision() {
@@ -535,9 +546,7 @@ export function applyListing(listing: Listing) {
 export function useDecision() {
   const scenario = useScenario()
   const journey = useJourney()
-  const name = journey.listing && journey.offerKind === 'replacement'
-    ? journey.listing.title
-    : vehicleById(scenario.active.vehicleId).name
+  const name = displayVehicleName(journey, scenario.active.vehicleId)
   return decide(decisionInput(journey, scenario.active.inputs, name))
 }
 
@@ -573,7 +582,13 @@ export function stageCompare() {
     )
     return
   }
-  setComparePair(live, { ...live, inputs: { ...live.inputs } }, 'Both bays are the buyout. Change one side to compare.')
+  const months = live.inputs.termMonths
+  const otherMonths = months >= 48 ? 36 : Math.min(84, months + 24)
+  setComparePair(
+    live,
+    { ...live, inputs: { ...live.inputs, termMonths: otherMonths } },
+    `Scenario A is the ${months}-month buyout. Scenario B is the same price on ${otherMonths} months.`,
+  )
 }
 
 bindMarketDelivery((snapshot) => applyMarket(snapshot))

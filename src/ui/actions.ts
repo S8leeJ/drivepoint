@@ -1,6 +1,6 @@
 import { openFeature, openOverlay } from '../experience/session.ts'
 import type { Decision } from '../finance/decide.ts'
-import { noteNextStep, prepareVisit, presentPath, recordEvent, stageCompare } from '../finance/journey.ts'
+import { getJourney, noteNextStep, prepareVisit, presentPath, recordEvent, stageCompare } from '../finance/journey.ts'
 
 export function followNext(decision: Decision) {
   if (decision.ctaTarget === 'financing') {
@@ -9,8 +9,10 @@ export function followNext(decision: Decision) {
     openFeature('financing')
     return
   }
-  noteNextStep(decision.next.title)
-  prepareVisit(`${decision.next.title}. ${decision.reason}`, decision.questions.join('\n'))
+  if (!getJourney().noted) {
+    noteNextStep(decision.next.title)
+    prepareVisit(`${decision.next.title}. ${decision.next.line}`, decision.questions.join('\n'))
+  }
   openOverlay('visit')
 }
 

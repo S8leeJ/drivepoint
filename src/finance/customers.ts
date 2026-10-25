@@ -87,7 +87,7 @@ const jordan: Customer = {
   refiApr: 0.064,
   refiTerm: 48,
   tradePrice: 32000,
-  tradeName: 'Camry',
+  tradeName: '2026 Camry',
   tradeApr: 0.069,
   tradeTerm: 60,
   serviceTitle: '60,000-mile service',

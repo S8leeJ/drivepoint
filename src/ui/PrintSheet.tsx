@@ -1,21 +1,20 @@
-import { useDecision, useJourney } from '../finance/journey.ts'
+import { displayVehicleName, useDecision, useJourney } from '../finance/journey.ts'
 import { buildLoan, formatMoney } from '../finance/loan.ts'
 import { useScenario } from '../finance/scenario.ts'
-import { vehicleById } from '../finance/vehicles.ts'
 
 export function PrintSheet() {
   const decision = useDecision()
   const journey = useJourney()
   const { active, compareA, compareB } = useScenario()
   const quote = buildLoan(active.inputs)
-  const vehicle = vehicleById(active.vehicleId)
+  const vehicleName = displayVehicleName(journey, active.vehicleId)
   return (
     <article className="print-sheet" hidden aria-hidden="true">
       <p>Illustrative comparison. Not a credit offer.</p>
       <h1>{decision.next.title}</h1>
       <p>{decision.reason}</p>
       {decision.changed && <p>{decision.changed}</p>}
-      <h2>Open offer · {vehicle.name}</h2>
+      <h2>Open offer · {vehicleName}</h2>
       <p>
         Price {formatMoney(quote.priceCents)} · down {formatMoney(quote.downCents)} · {quote.inputs.annualRate.toFixed(1)}% nominal · {quote.inputs.termMonths} months · monthly {formatMoney(quote.monthlyCents)} · interest {formatMoney(quote.totalInterestCents)} · upfront {formatMoney(quote.upfrontCents)}
       </p>

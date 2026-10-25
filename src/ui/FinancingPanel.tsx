@@ -70,7 +70,7 @@ export function FinancingPanel() {
           min={0}
           max={12}
           step={0.05}
-          display={formatMoney(quote.taxCents)}
+          display={`${input.taxRate}% · ${formatMoney(quote.taxCents)} tax`}
           onChange={(taxRate) => setInputs({ taxRate })}
         />
         <Field

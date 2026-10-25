@@ -43,7 +43,7 @@ export function ComparePanel() {
             className={compareFocus === focus ? 'customer on' : 'customer'}
             onClick={() => setCompareFocus(focus)}
           >
-            {focus === 'both' ? 'Both bays' : `Bay ${focus.toUpperCase()}`}
+            {focus === 'both' ? 'Both cars' : `Car ${focus.toUpperCase()}`}
           </button>
         ))}
         </div>
@@ -103,10 +103,10 @@ function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Sc
     return (
       <section className="scenario-card" aria-label={`Scenario ${label}`}>
         <p className="eyebrow">{eyebrow}</p>
-        <h3>Empty bay</h3>
-        <p>Save the current financing scenario into this bay.</p>
+        <h3>Nothing saved here</h3>
+        <p>Use the offer you are editing.</p>
         <button type="button" className="ghost" onClick={() => replaceCompare(slot)}>
-          Use current scenario
+          Use current offer
         </button>
       </section>
     )
@@ -125,6 +125,7 @@ function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Sc
     <section className="scenario-card" aria-label={`Scenario ${label}`}>
       <p className="eyebrow">{eyebrow}</p>
       <h3>{title}</h3>
+      <p className="fine">{formatRate(input.annualRate)} · {input.termMonths} months</p>
       {slot === 'b' && journey.listing?.link && (
         <p><a className="text-button" href={journey.listing.link} target="_blank" rel="noreferrer">View listing</a></p>
       )}

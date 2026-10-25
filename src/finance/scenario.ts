@@ -20,10 +20,10 @@ type ScenarioState = {
 
 const listeners = new Set<() => void>()
 
-const initialInputs: LoanInputs = baselineOffer(customerById('maya')).inputs
+const openingOffer = baselineOffer(customerById('maya'))
 
 let state: ScenarioState = {
-  active: { vehicleId: 'hatch', colorId: 'green', inputs: initialInputs },
+  active: { vehicleId: 'hatch', colorId: 'green', inputs: openingOffer.inputs },
   notice: null,
   compareA: null,
   compareB: null,
@@ -110,6 +110,12 @@ export function chooseVehicle(vehicleId: VehicleId) {
 export function clearNotice() {
   if (!state.notice) return
   state = { ...state, notice: null }
+  emit()
+}
+
+export function clearCompare() {
+  if (!state.compareA && !state.compareB) return
+  state = { ...state, compareA: null, compareB: null }
   emit()
 }
 

@@ -21,17 +21,21 @@ export function MarketPanel() {
   const shown = cards.slice(0, 8)
   const budgetCents = Math.round(journey.preferences.budget * 100)
   const note = market.snapshot ? marketNote(market.snapshot) : null
-  const status = market.status === 'loading' || market.status === 'idle'
+  const status = market.status === 'loading'
     ? 'Looking up this ZIP.'
-    : market.status === 'ready' && note
-      ? note
-      : market.status === 'ready' && market.snapshot?.listings.length === 0
-        ? 'No priced listings came back for this ZIP.'
-        : market.status === 'ready' && market.snapshot?.sample === 'empty'
-          ? 'No listings within 8,000 miles, so the contract value stays.'
-          : market.status === 'ready'
-            ? 'No priced listings came back for this ZIP.'
-            : 'Search is off for this session.'
+    : market.status === 'idle'
+      ? 'Enter a ZIP to see cars for sale near this budget.'
+      : market.status === 'ready' && note
+        ? note
+        : market.status === 'ready' && market.snapshot?.listings.length === 0
+          ? 'No priced listings came back for this ZIP.'
+          : market.status === 'ready' && market.snapshot?.sample === 'empty'
+            ? 'No listings within 8,000 miles, so the contract value stays.'
+            : market.status === 'ready'
+              ? 'No priced listings came back for this ZIP.'
+              : market.status === 'error'
+                ? 'That lookup did not come back. Try the ZIP again.'
+                : 'Live search is off for this session. The recommendation still uses the sample value on file.'
   const searchable = market.status === 'ready' || market.status === 'off' || market.status === 'error'
 
   return (
@@ -39,12 +43,12 @@ export function MarketPanel() {
       <div className="panel-head">
         <div>
           <p className="eyebrow">Market · {market.zip || 'ZIP'}</p>
-          <h2>Live lot</h2>
+          <h2>Cars near this budget</h2>
         </div>
         <AnswerLink />
       </div>
       <p className="fine">Asking prices from cars for sale near this ZIP. The payment is this offer’s rate, term, tax, fees, and down payment.</p>
-      <p className={note && market.snapshot?.sample === 'accepted' ? 'note strong' : 'note'}>{status}</p>
+      <p className={market.status === 'ready' && market.snapshot?.sample === 'accepted' ? 'note strong' : market.status === 'idle' ? 'fine' : 'note'}>{status}</p>
       <div className="zip-row">
         <label className="field">
           <span>ZIP</span>

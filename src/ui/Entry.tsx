@@ -23,7 +23,8 @@ export function Entry() {
               aria-pressed={selected === customer.id}
               onClick={() => setSelected(customer.id)}
             >
-              <strong>{customer.contract === 'lease' ? 'Lease ending' : 'Loan in progress'}</strong>
+              <em>{customer.contract === 'lease' ? 'Lease ending' : 'Loan in progress'}</em>
+              <strong>{customer.name}</strong>
               <span>{customer.vehicle}</span>
             </button>
           ))}
@@ -38,7 +39,7 @@ export function Entry() {
         >
           Show my next move <span aria-hidden="true">→</span>
         </button>
-        <p className="fine">Uses {person.name}’s sample details. You can change the numbers next.</p>
+        <p className="fine">Sample numbers for {person.name}. You can change them next.</p>
       </div>
     </div>
   )

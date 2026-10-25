@@ -16,7 +16,7 @@ export function VisitPanel() {
   const done = CHECKLIST.filter(([id]) => journey.checks[id]).length
   const fill = () => {
     prepareVisit(
-      `${decision.next.title}. ${decision.reason}`,
+      `${decision.next.title}. ${decision.next.line}`,
       decision.questions.join('\n'),
     )
   }

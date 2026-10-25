@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { AnswerLink } from './AnswerLink.tsx'
+import { displayVehicleName, useJourney } from '../finance/journey.ts'
 import { buildLoan, formatMoney, scheduleRow } from '../finance/loan.ts'
 import { setTimelineMonth, useScenario } from '../finance/scenario.ts'
-import { vehicleById } from '../finance/vehicles.ts'
 
 function monthTitle(month: number) {
   const date = new Date(Date.UTC(2026, 9 + month, 1))
@@ -15,7 +15,8 @@ export function TimelinePanel() {
   const quote = useMemo(() => buildLoan(active.inputs), [active])
   const term = quote.inputs.termMonths
   const row = scheduleRow(quote, timelineMonth)
-  const vehicle = vehicleById(active.vehicleId)
+  const journey = useJourney()
+  const vehicleName = displayVehicleName(journey, active.vehicleId)
   const marks = [
     { label: 'Purchase', month: 0 },
     ...(term >= 12 ? [{ label: 'Year 1', month: 12 }] : []),
@@ -31,7 +32,7 @@ export function TimelinePanel() {
         </div>
         <AnswerLink />
       </div>
-      <p className="fine">{vehicle.name} · illustrative offer over {term} months.</p>
+      <p className="fine">{vehicleName} · illustrative offer over {term} months.</p>
       <div className="answer-hero compact">
         <p className="eyebrow">Balance left</p>
         <p className="payment" aria-live="polite">{formatMoney(row.balanceCents)}</p>

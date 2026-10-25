@@ -627,8 +627,10 @@ function score(input: DecisionInput): Decision {
     ...next.assumptions,
     ...(input.market?.note ? [input.market.note] : []),
     `Priority: ${priorityLabel(input.preferences.priority)}`,
-    `Budget ${money(budgetCents)} a month`,
   ]
+  if (!assumptions.some((item) => item.startsWith('Budget'))) {
+    assumptions.push(`Budget ${money(budgetCents)} a month`)
+  }
   const ctaTarget: Decision['ctaTarget'] = next.id === 'buyout' || next.id === 'refinance' || next.id === 'replacement' || next.id === 'trade'
     ? 'financing'
     : 'note'

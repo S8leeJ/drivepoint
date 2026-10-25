@@ -156,7 +156,7 @@ export function Hud() {
               setMuted(toggleMute())
             }}
           >
-            {muted ? 'Sound off' : 'Sound on'}
+            {muted ? 'Unmute' : 'Mute'}
           </button>
         </div>
       )}
