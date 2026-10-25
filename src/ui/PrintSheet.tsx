@@ -10,7 +10,7 @@ export function PrintSheet() {
   const quote = buildLoan(active.inputs)
   const vehicle = vehicleById(active.vehicleId)
   return (
-    <article className="print-sheet" hidden>
+    <article className="print-sheet" hidden aria-hidden="true">
       <p>Illustrative comparison. Not a credit offer.</p>
       <h1>{decision.next.title}</h1>
       <p>{decision.reason}</p>

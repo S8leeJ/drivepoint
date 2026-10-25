@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { closeOverlay } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { CHECKLIST, prepareVisit, setVisitDraft, submitRequest, toggleCheck, useDecision, useJourney, type RequestKind } from '../finance/journey.ts'
 
 const REQUESTS: { id: RequestKind; label: string }[] = [
@@ -28,9 +28,7 @@ export function VisitPanel() {
           <p className="eyebrow">Visit</p>
           <h2>Prepare my visit</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeOverlay}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <p className="fine">No provider is connected. A request stays in this session, with a clear success or a simulated failure. It is not sent to a dealer.</p>
       <button type="button" className="ghost" onClick={fill}>

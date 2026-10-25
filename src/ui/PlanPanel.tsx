@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { closeOverlay } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { monthlyEnergy, savingsDown } from '../finance/decide.ts'
 import {
   applyFuelEstimate,
@@ -60,12 +60,10 @@ export function PlanPanel() {
     <aside className="feature-panel" aria-label="Plan">
       <div className="panel-head">
         <div>
-          <p className="eyebrow">Plan</p>
-          <h2>What has to be true</h2>
+          <p className="eyebrow">Your situation</p>
+          <h2>Adjust the numbers</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeOverlay}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <DecisionStrip />
       <p className="fine">Skip anything. Empty ownership costs stay at zero until you enter them. The next move recalculates from these answers.</p>

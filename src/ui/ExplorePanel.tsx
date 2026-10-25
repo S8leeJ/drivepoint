@@ -1,4 +1,5 @@
-import { closeFeature, requestFeature } from '../experience/session.ts'
+import { openFeature } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { clearListing, getJourney, shopVehicle } from '../finance/journey.ts'
 import { formatMoney } from '../finance/loan.ts'
 import { addActiveToCompare, chooseVehicle, setColor, setInputs, useScenario } from '../finance/scenario.ts'
@@ -17,9 +18,7 @@ export function ExplorePanel() {
           <p className="eyebrow">Showroom</p>
           <h2>{vehicle.name}</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeFeature}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <DecisionStrip />
       <p className="fine">Drag to orbit the car. Choosing a vehicle replaces the open offer with that demo price. Illustrative specifications, not a manufacturer listing.</p>
@@ -81,7 +80,7 @@ export function ExplorePanel() {
         </p>
       )}
       <div className="panel-actions">
-        <button type="button" className="cta" onClick={() => requestFeature('financing')}>
+        <button type="button" className="cta" onClick={() => openFeature('financing')}>
           Choose for financing
         </button>
         <button type="button" className="ghost" onClick={addActiveToCompare}>

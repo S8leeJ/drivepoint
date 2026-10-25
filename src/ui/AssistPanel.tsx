@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { closeOverlay, openOverlay, requestFeature } from '../experience/session.ts'
+import { openFeature, openOverlay } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { answerQuestion, suggestions, type ExplainAction } from '../finance/explain.ts'
 import { recordEvent, setHighlight, setShowCosts, useDecision } from '../finance/journey.ts'
 
@@ -7,19 +8,19 @@ function run(action: ExplainAction) {
   if (action === 'interest') {
     setHighlight('interest')
     setShowCosts(true)
-    requestFeature('financing')
+    openFeature('financing')
     return
   }
   if (action === 'compare') {
-    requestFeature('compare')
+    openFeature('compare')
     return
   }
   if (action === 'timeline') {
-    requestFeature('timeline')
+    openFeature('timeline')
     return
   }
   if (action === 'financing') {
-    requestFeature('financing')
+    openFeature('financing')
     return
   }
   if (action === 'plan') {
@@ -47,9 +48,7 @@ export function AssistPanel() {
           <p className="eyebrow">Explain</p>
           <h2>Ask about these numbers</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeOverlay}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <p className="fine">Answers use the numbers in this session. They are not a credit decision and they do not call out for new data.</p>
       <div className="choice-row">

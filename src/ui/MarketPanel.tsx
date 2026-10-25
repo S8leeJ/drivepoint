@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { closeFeature } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { customerById } from '../finance/customers.ts'
 import { applyListing, applyMarket, refreshMarket, useJourney } from '../finance/journey.ts'
 import { armMarket, useMarket } from '../finance/liveMarket.ts'
@@ -41,9 +41,7 @@ export function MarketPanel() {
           <p className="eyebrow">Market · {market.zip || 'ZIP'}</p>
           <h2>Live lot</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeFeature}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <p className="fine">Asking prices from cars for sale near this ZIP. The payment is this offer’s rate, term, tax, fees, and down payment.</p>
       <p className={note && market.snapshot?.sample === 'accepted' ? 'note strong' : 'note'}>{status}</p>
