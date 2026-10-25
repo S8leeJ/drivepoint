@@ -4,13 +4,12 @@ import {
   FEATURE_HINT_RADIUS,
   FEATURE_OPEN_RADIUS,
   FEATURE_OPEN_SPEED_KMH,
-  FEATURE_ORDER,
   FEATURES,
   nearestFeature,
 } from '../experience/destinations.ts'
-import { openFeature, requestFeature, skipTravel, travelProgress, useSession, cancelTravel, backToDrive, openOverlay } from '../experience/session.ts'
+import { openFeature, skipTravel, travelProgress, useSession, cancelTravel, openOverlay } from '../experience/session.ts'
 import { CUSTOMERS } from '../finance/customers.ts'
-import { getJourney, loadCustomer, useJourney } from '../finance/journey.ts'
+import { getJourney } from '../finance/journey.ts'
 import { getMarketSnapshot } from '../finance/liveMarket.ts'
 import { formatMoney } from '../finance/loan.ts'
 import { captionFor, topInBudget } from '../finance/market.ts'
@@ -65,15 +64,14 @@ function Pedal({ control, label }: { control: HeldControl; label: string }) {
 
 export function Hud() {
   const experience = useSession()
-  const journey = useJourney()
   const [speed, setSpeed] = useState(0)
   const [gear, setGear] = useState(telemetry.gear)
   const [muted, setMuted] = useState(drive.muted)
   const [activeStop, setActiveStop] = useState<RoadStop | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [arrival, setArrival] = useState<(typeof FEATURES)['financing'] | null>(null)
-  const [nearbyFeature, setNearbyFeature] = useState<(typeof FEATURES)['financing']>(FEATURES.financing)
   const [progress, setProgress] = useState(0)
+  const [coach, setCoach] = useState(true)
   const locked = experience.mode === 'feature' || experience.mode === 'timeline' || experience.overlay != null
 
   useEffect(() => {
@@ -90,7 +88,6 @@ export function Hud() {
       }
       const nearStop = nearestStop(telemetry.x, telemetry.z)
       const nearFeature = nearestFeature(telemetry.x, telemetry.z)
-      setNearbyFeature(nearFeature.feature)
       const stopArrived = nearStop.distance <= OPEN_RADIUS && telemetry.speedKmh <= OPEN_SPEED_KMH
       const featureArrived = nearFeature.distance <= FEATURE_OPEN_RADIUS && telemetry.speedKmh <= FEATURE_OPEN_SPEED_KMH
       const showFeature = featureArrived && (!stopArrived || nearFeature.distance <= nearStop.distance)
@@ -112,108 +109,38 @@ export function Hud() {
 
   const traveling = experience.mode === 'guided' && experience.travelFeature
   const place = traveling ? FEATURES[experience.travelFeature!].place : ''
-  const nearbyName = nearbyFeature.id === 'financing' ? 'Cost Studio' : nearbyFeature.place
+  const driving = experience.mode === 'manual' && !experience.overlay
 
   if (!experience.entered) return <Entry />
 
   return (
     <div className={locked ? 'hud driving-locked' : 'hud'}>
-      <div className="title-block">
-        <p className="eyebrow">Toyota Financial Services · Golden hour</p>
-        <h1>Golden Valley</h1>
-        <p className="title-subtitle">What's your next move?</p>
-        <div className="customers">
-          {CUSTOMERS.map((person) => (
-            <button
-              key={person.id}
-              type="button"
-              className={person.id === journey.customerId ? 'customer on' : 'customer'}
-              onClick={() => loadCustomer(person.id)}
-            >
-              {person.name}
-            </button>
-          ))}
-        </div>
-        <div className="desk-nav">
-          <button
-            type="button"
-            className={experience.overlay === 'move' ? 'customer on' : 'customer'}
-            onClick={() => openOverlay('move')}
-          >
-            Next move
+      {driving && (
+        <div className="drive-bar">
+          <button type="button" className="nav-pill" onClick={() => openOverlay('move')}>
+            My answer
           </button>
           <button
             type="button"
-            className={experience.overlay === 'plan' ? 'customer on' : 'customer'}
-            onClick={() => openOverlay('plan')}
+            className="nav-pill"
+            onClick={() => {
+              engine.ensure()
+              setMuted(toggleMute())
+            }}
           >
-            Plan
-          </button>
-          <button
-            type="button"
-            className={experience.overlay === 'assist' ? 'customer on' : 'customer'}
-            onClick={() => openOverlay('assist')}
-          >
-            Ask
-          </button>
-          <button type="button" className={experience.overlay === 'garage' ? 'customer on' : 'customer'} onClick={() => openOverlay('garage')}>
-            Garage
-          </button>
-          <button type="button" className={experience.overlay === 'visit' ? 'customer on' : 'customer'} onClick={() => openOverlay('visit')}>
-            Visit
-          </button>
-          <button type="button" className={experience.overlay === 'business' ? 'customer on' : 'customer'} onClick={() => openOverlay('business')}>
-            Business
+            {muted ? 'Sound off' : 'Sound on'}
           </button>
         </div>
-      </div>
-      <div className="top-actions">
-        <div className="feature-nav" role="navigation" aria-label="Valley features">
-          <button
-            type="button"
-            className={experience.mode === 'manual' && !experience.overlay ? 'nav-pill active' : 'nav-pill'}
-            onClick={() => (experience.mode === 'guided' ? cancelTravel() : backToDrive())}
-          >
-            Drive
+      )}
+      {driving && coach && (
+        <div className="coach">
+          <p className="eyebrow">Driving is optional</p>
+          <h2>The answer stays put.</h2>
+          <p>W A S D or the arrows move the car. Space brakes. R puts it back on the road. My answer brings the recommendation back.</p>
+          <button type="button" className="cta" onClick={() => setCoach(false)}>
+            Keep driving
           </button>
-          {FEATURE_ORDER.map((id) => {
-            const active = experience.feature === id || experience.travelFeature === id
-            return (
-              <button
-                key={id}
-                type="button"
-                className={active ? 'nav-pill active' : 'nav-pill'}
-                aria-current={active ? 'true' : undefined}
-                onClick={() => requestFeature(id)}
-              >
-                {FEATURES[id].label}
-              </button>
-            )
-          })}
         </div>
-        <button
-          type="button"
-          className="mute nav-pill"
-          onClick={() => {
-            engine.ensure()
-            setMuted(toggleMute())
-          }}
-        >
-          {muted ? 'Sound off' : 'Sound on'}
-        </button>
-      </div>
-      {!locked && !activeStop && !arrival && (
-        <>
-          <button type="button" className="roadside-callout" onClick={() => requestFeature(nearbyFeature.id)}>
-            <span className="eyebrow">Roadside destination</span>
-            <strong>{nearbyName} <span aria-hidden="true">→</span></strong>
-          </button>
-          <div className="drive-note">
-            <p className="eyebrow">The next turn</p>
-            <h2>A place to pause.</h2>
-            <p>Open Next move for the recommendation, or park near a stop when you want the road to lead you there.</p>
-          </div>
-        </>
       )}
       {activeStop && !locked && <NextMove stopId={activeStop.id} />}
       {experience.overlay === 'move' && <MovePanel />}
@@ -251,23 +178,25 @@ export function Hud() {
           </div>
         </div>
       )}
-      {arrival && (
+      {driving && arrival && (
         <div className="arrival-card">
           <p className="eyebrow">{arrival.place}</p>
-          <h2>You’re here</h2>
-          <p>Slow and inside the ring. Opening uses the same {arrival.label.toLowerCase()} screen as the navigation button.</p>
+          <h2>{arrival.label}</h2>
+          <p>Same numbers as your answer.</p>
           <button type="button" className="cta" onClick={() => openFeature(arrival.id, true)}>
             Open
           </button>
         </div>
       )}
-      <div className="speed">
-        <span className="gear">{gear}</span>
-        <strong>{Math.round(speed)}</strong>
-        <span>km/h</span>
-      </div>
-      {hint && <p className="hint beacon">{hint}</p>}
-      {!locked && <p className="hint">WASD or arrows to drive. Space handbrake. R reset. M mutes.</p>}
+      {driving && (
+        <div className="speed">
+          <span className="gear">{gear}</span>
+          <strong>{Math.round(speed)}</strong>
+          <span>km/h</span>
+        </div>
+      )}
+      {driving && hint && <p className="hint beacon">{hint}</p>}
+      {driving && (
       <div className="touch">
         <div className="steer">
           <Pedal control="left" label="Left" />
@@ -279,6 +208,7 @@ export function Hud() {
           <Pedal control="forward" label="Gas" />
         </div>
       </div>
+      )}
     </div>
   )
 }

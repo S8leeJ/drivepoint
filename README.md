@@ -1,17 +1,17 @@
 # What's Your Next Move?
 
-A browser driving scene for a Toyota Financial Services customer decision. It opens on a racing-green hatchback in Golden Valley. Choose Explore the car or Explore payments, then drive the loop or skip straight to the desk.
+A Toyota Financial Services customer decision. It opens on a racing-green hatchback in Golden Valley and asks you to pick a contract. The next screen is one recommended next step. Driving the loop is optional.
 
 Maya Chen and Jordan Hale each load a contract into the same financing offer. Home, the Dealer, and Service use that live decision, and the brighter ring is the recommended next step. Changing the price, rate, term, budget, mileage, or priority recalculates it and says what changed. The numbers come from plain rules on synthetic data, with no API key. The interest field is a nominal annual rate, not an APR.
 
-Financing, Timeline, Explore, and Compare sit on the same loop. Plan holds budget, ownership costs, a buy-versus-lease horizon, trade equity, and an explicitly uncertain savings path. Ask explains the figures already on screen. The garage saves scenarios, and Prepare my visit writes a summary you can edit. Test-drive, appraisal, financing, and service requests stay on this device, including a simulated failure. Export prints the comparison. Business view lists the session events.
+Adjust the numbers when the budget, mileage, or offer is different. Ask explains the figures already on screen. Prepare a visit writes a summary you can edit. Test-drive, appraisal, financing, and service requests stay on this device, including a simulated failure. Month-by-month payoff, a two-offer comparison, saved scenarios, and a session recap sit under More.
 
 ## Demo
 
-Pick a person in the top left, then slow down inside a ring.
+Pick Maya or Jordan on the opening card.
 
-- Maya Chen is on a 2023 RAV4 Hybrid lease and is over her miles. Her next move is the dealer buyout. Drive to the Dealer ring on the east straight and request the quote.
-- Jordan Hale is on a 2021 Camry loan at 3.9%. Refinancing and trading in cost more than staying. His next move is the 60,000-mile service. Switch to Jordan and drive to the Service ring on the north straight.
+- Maya Chen is on a 2023 RAV4 Hybrid lease and is on pace to finish over her miles. Her next move is the dealer buyout. Open the buyout offer from that screen.
+- Jordan Hale is on a 2021 Camry loan at 3.9%. Refinancing and trading in cost more than staying. His next move is the 60,000-mile service. Switch to Jordan on the answer screen.
 
 ## Run
 

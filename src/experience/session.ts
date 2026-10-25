@@ -192,12 +192,8 @@ export function closeFeature() {
   emit()
 }
 
-export function begin(choice: 'car' | 'payments') {
+export function enterAnswer() {
   session.entered = true
-  if (choice === 'car') {
-    openFeature('explore')
-    return
-  }
   openOverlay('move')
 }
 

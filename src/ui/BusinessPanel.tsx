@@ -1,4 +1,4 @@
-import { closeOverlay } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { readFunnel } from '../finance/funnel.ts'
 import { useDecision, useJourney } from '../finance/journey.ts'
 import { useScenario } from '../finance/scenario.ts'
@@ -20,12 +20,10 @@ export function BusinessPanel() {
     <aside className="feature-panel" aria-label="Business view">
       <div className="panel-head">
         <div>
-          <p className="eyebrow">Business view</p>
-          <h2>This session</h2>
+          <p className="eyebrow">For the store</p>
+          <h2>How this session went</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeOverlay}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <p className="fine">Events are from this browser session only. Nothing is uploaded.</p>
       <ol className="funnel">

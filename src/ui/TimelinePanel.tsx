@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { closeFeature } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { buildLoan, formatMoney, scheduleRow } from '../finance/loan.ts'
 import { setTimelineMonth, useScenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
@@ -30,9 +30,7 @@ export function TimelinePanel() {
           <p className="eyebrow">Ownership timeline</p>
           <h2>{monthTitle(timelineMonth)}</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeFeature}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <DecisionStrip />
       <p className="fine">

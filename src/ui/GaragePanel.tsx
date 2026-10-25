@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { closeOverlay } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { deleteBay, renameBay, reopenBay, saveBay, useJourney } from '../finance/journey.ts'
 import { buildLoan, formatMoney } from '../finance/loan.ts'
 import { vehicleById } from '../finance/vehicles.ts'
@@ -15,9 +15,7 @@ export function GaragePanel() {
           <p className="eyebrow">Garage</p>
           <h2>Saved scenarios</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeOverlay}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <p className="fine">Each bay keeps the offer and the budget it was saved with. Reopening restores those inputs.</p>
       <label className="field">

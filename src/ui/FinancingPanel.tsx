@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { closeFeature, requestFeature } from '../experience/session.ts'
+import { openFeature } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { restoreOffer, setShowCosts, useJourney } from '../finance/journey.ts'
 import { buildLoan, formatMoney, formatRate, maxDownPayment } from '../finance/loan.ts'
 import { addActiveToCompare, clearNotice, setInputs, useScenario } from '../finance/scenario.ts'
@@ -24,15 +25,13 @@ export function FinancingPanel() {
           <p className="eyebrow">Illustrative financing</p>
           <h2>{titled ? listing.title : vehicle.name}</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeFeature}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <DecisionStrip />
       <p className="fine">
         {titled
           ? `${vehicle.name} in the valley. Illustrative example, not a credit offer.`
-          : 'Illustrative example. Not a credit offer or a Toyota Financial Services quote. Editing these fields updates the next move.'}
+          : 'Illustrative example, not a credit offer. These fields update the next move.'}
         {titled && listing.link && (
           <>
             {' '}
@@ -176,7 +175,7 @@ export function FinancingPanel() {
         <button type="button" className="cta" onClick={addActiveToCompare}>
           Add to compare
         </button>
-        <button type="button" className="ghost" onClick={() => requestFeature('timeline')}>
+        <button type="button" className="ghost" onClick={() => openFeature('timeline')}>
           Ownership timeline
         </button>
         <button type="button" className="ghost" onClick={restoreOffer}>

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { closeFeature, requestFeature, setCompareFocus, useSession } from '../experience/session.ts'
+import { openFeature, setCompareFocus, useSession } from '../experience/session.ts'
+import { AnswerLink } from './AnswerLink.tsx'
 import { customerById } from '../finance/customers.ts'
 import { useJourney } from '../finance/journey.ts'
 import { buildLoan, compareTradeoff, formatMoney, formatRate, maxDownPayment, type LoanInputs, type LoanQuote } from '../finance/loan.ts'
@@ -30,9 +31,7 @@ export function ComparePanel() {
           <p className="eyebrow">Compare</p>
           <h2>Two saved scenarios</h2>
         </div>
-        <button type="button" className="text-button" onClick={closeFeature}>
-          Back to driving
-        </button>
+        <AnswerLink />
       </div>
       <DecisionStrip />
       <p className="fine">Each bay is an independent snapshot. Editing one does not change the other or the car you are financing until you continue.</p>
@@ -168,7 +167,7 @@ function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Sc
           type="button"
           className="cta"
           onClick={() => {
-            if (continueWith(slot)) requestFeature('financing')
+            if (continueWith(slot)) openFeature('financing')
           }}
         >
           Continue with {label}
