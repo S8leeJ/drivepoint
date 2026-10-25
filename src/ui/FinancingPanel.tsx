@@ -1,19 +1,21 @@
 import { useMemo } from 'react'
-import { openFeature } from '../experience/session.ts'
+import { openFeature, openOverlay } from '../experience/session.ts'
 import { AnswerLink } from './AnswerLink.tsx'
+import { customerById } from '../finance/customers.ts'
 import { restoreOffer, setShowCosts, useJourney } from '../finance/journey.ts'
 import { buildLoan, formatMoney, formatRate, maxDownPayment } from '../finance/loan.ts'
 import { addActiveToCompare, clearNotice, setInputs, useScenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
-import { DecisionStrip } from './DecisionStrip.tsx'
 import { Field } from './Fields.tsx'
 import { QuoteExplainer } from './QuoteExplainer.tsx'
+import { openStagedCompare } from './actions.ts'
 
 export function FinancingPanel() {
   const { active, notice } = useScenario()
   const vehicle = vehicleById(active.vehicleId)
-  const { showCosts, highlight, listing, offerKind } = useJourney()
+  const { showCosts, highlight, listing, offerKind, customerId } = useJourney()
   const titled = listing != null && offerKind === 'replacement'
+  const contractCar = customerId && offerKind !== 'replacement' ? customerById(customerId).vehicle : null
   const quote = useMemo(() => buildLoan(active.inputs), [active])
   const downMax = maxDownPayment(active.inputs)
   const input = active.inputs
@@ -22,16 +24,13 @@ export function FinancingPanel() {
     <aside className="feature-panel" aria-label="Financing">
       <div className="panel-head">
         <div>
-          <p className="eyebrow">Illustrative financing</p>
-          <h2>{titled ? listing.title : vehicle.name}</h2>
+          <p className="eyebrow">See the cost</p>
+          <h2>{titled ? listing.title : contractCar ?? vehicle.name}</h2>
         </div>
         <AnswerLink />
       </div>
-      <DecisionStrip />
       <p className="fine">
-        {titled
-          ? `${vehicle.name} in the valley. Illustrative example, not a credit offer.`
-          : 'Illustrative example, not a credit offer. These fields update the next move.'}
+        Illustrative payment, not a credit offer.
         {titled && listing.link && (
           <>
             {' '}
@@ -39,58 +38,32 @@ export function FinancingPanel() {
           </>
         )}
       </p>
-      {notice && (
-        <p className="note strong">
-          {notice}{' '}
-          <button type="button" className="text-button" onClick={clearNotice}>
-            Dismiss
-          </button>
-        </p>
-      )}
+      {notice && <div className="inline-notice"><span>{notice}</span><button type="button" className="text-button" onClick={clearNotice}>Dismiss</button></div>}
       <p className="payment" aria-live="polite">
         {formatMoney(quote.monthlyCents)}
         <span>/ month</span>
       </p>
-      <p>{quote.explanation}</p>
-      <Field
-        label="Vehicle price"
-        value={input.price}
-        min={8000}
-        max={80000}
-        step={50}
-        display={formatMoney(quote.priceCents)}
-        onChange={(price) => setInputs({ price })}
-      />
-      <Field
-        label="Down payment"
-        value={input.downPayment}
-        min={0}
-        max={Math.max(0, downMax)}
-        step={50}
-        display={formatMoney(quote.downCents)}
-        onChange={(downPayment) => setInputs({ downPayment })}
-      />
-      <Field
-        label="Annual interest rate"
-        value={input.annualRate}
-        min={0}
-        max={18}
-        step={0.1}
-        display={formatRate(input.annualRate)}
-        onChange={(annualRate) => setInputs({ annualRate })}
-      />
-      <p className="fine">Nominal annual rate, compounded monthly. This is not an APR.</p>
-      <Field
-        label="Term in months"
-        value={input.termMonths}
-        min={12}
-        max={84}
-        step={1}
-        display={`${input.termMonths} months`}
-        onChange={(termMonths) => setInputs({ termMonths })}
-      />
-      <details>
-        <summary>Taxes and fees · {formatMoney(quote.taxCents + quote.feesCents)}</summary>
+      <p className="quote-basics">{formatMoney(quote.priceCents)} price · {formatRate(input.annualRate)} rate · {input.termMonths} months</p>
+      <div className="simple-field">
+        <Field
+          label="Down payment"
+          value={input.downPayment}
+          min={0}
+          max={Math.max(0, downMax)}
+          step={50}
+          display={formatMoney(quote.downCents)}
+          onChange={(downPayment) => setInputs({ downPayment })}
+        />
+      </div>
+      <button type="button" className="cta" onClick={() => openOverlay('visit')}>Prepare my next step →</button>
+      <details className="progressive-detail">
+        <summary>Change price, rate, or loan length</summary>
+        <Field label="Vehicle price" value={input.price} min={8000} max={80000} step={50} display={formatMoney(quote.priceCents)} onChange={(price) => setInputs({ price })} />
+        <Field label="Annual interest rate" value={input.annualRate} min={0} max={18} step={0.1} display={formatRate(input.annualRate)} onChange={(annualRate) => setInputs({ annualRate })} />
+        <p className="fine">Nominal annual rate, compounded monthly. This is not an APR.</p>
+        <Field label="Term in months" value={input.termMonths} min={12} max={84} step={1} display={`${input.termMonths} months`} onChange={(termMonths) => setInputs({ termMonths })} />
+        <details>
+          <summary>Taxes and fees · {formatMoney(quote.taxCents + quote.feesCents)}</summary>
         <Field
           label="Tax rate"
           value={input.taxRate}
@@ -117,8 +90,12 @@ export function FinancingPanel() {
           />
           Roll taxes and fees into the loan
         </label>
+        </details>
       </details>
-      <dl className="figures">
+      <details className="progressive-detail">
+        <summary>See the full cost</summary>
+        <p>{quote.explanation}</p>
+        <dl className="figures">
         <div>
           <dt>Amount financed</dt>
           <dd>{formatMoney(quote.financedCents)}</dd>
@@ -135,11 +112,11 @@ export function FinancingPanel() {
           <dt>Upfront cash</dt>
           <dd>{formatMoney(quote.upfrontCents)}</dd>
         </div>
-      </dl>
-      <button type="button" className={showCosts ? 'customer on' : 'ghost'} onClick={() => setShowCosts(!showCosts)}>
+        </dl>
+        <button type="button" className={showCosts ? 'customer on' : 'ghost'} onClick={() => setShowCosts(!showCosts)}>
         {showCosts ? 'Hide where the money goes' : 'Show where the money goes'}
       </button>
-      {showCosts && (
+        {showCosts && (
         <table className="cost-table">
           <caption>Where the money goes</caption>
           <tbody>
@@ -169,19 +146,18 @@ export function FinancingPanel() {
             </tr>
           </tbody>
         </table>
-      )}
-      <QuoteExplainer />
-      <div className="panel-actions">
-        <button type="button" className="cta" onClick={addActiveToCompare}>
-          Add to compare
-        </button>
-        <button type="button" className="ghost" onClick={() => openFeature('timeline')}>
-          Ownership timeline
-        </button>
-        <button type="button" className="ghost" onClick={restoreOffer}>
-          Starting offer
-        </button>
-      </div>
+        )}
+        <QuoteExplainer />
+      </details>
+      <details className="progressive-detail">
+        <summary>More ways to explore</summary>
+        <div className="panel-actions secondary-actions">
+          <button type="button" className="ghost" onClick={openStagedCompare}>Compare two offers</button>
+          <button type="button" className="ghost" onClick={addActiveToCompare}>Save this quote</button>
+          <button type="button" className="ghost" onClick={() => openFeature('timeline')}>Month by month</button>
+          <button type="button" className="ghost" onClick={restoreOffer}>Starting offer</button>
+        </div>
+      </details>
     </aside>
   )
 }

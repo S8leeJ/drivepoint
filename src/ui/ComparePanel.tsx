@@ -6,7 +6,6 @@ import { useJourney } from '../finance/journey.ts'
 import { buildLoan, compareTradeoff, formatMoney, formatRate, maxDownPayment, type LoanInputs, type LoanQuote } from '../finance/loan.ts'
 import { continueWith, replaceCompare, updateCompare, useScenario, type Scenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
-import { DecisionStrip } from './DecisionStrip.tsx'
 import { Field } from './Fields.tsx'
 
 function signed(cents: number) {
@@ -33,10 +32,10 @@ export function ComparePanel() {
         </div>
         <AnswerLink />
       </div>
-      <DecisionStrip />
-      <p className="fine">Each bay is an independent snapshot. Editing one does not change the other or the car you are financing until you continue.</p>
       {notice && <p className="note strong">{notice}</p>}
-      <div className="choice-row" role="group" aria-label="Bay camera">
+      <details className="progressive-detail">
+        <summary>Change the car view</summary>
+        <div className="choice-row" role="group" aria-label="Bay camera">
         {(['both', 'a', 'b'] as const).map((focus) => (
           <button
             key={focus}
@@ -47,11 +46,15 @@ export function ComparePanel() {
             {focus === 'both' ? 'Both bays' : `Bay ${focus.toUpperCase()}`}
           </button>
         ))}
-      </div>
+        </div>
+      </details>
       <div className={narrow ? 'compare-board stacked' : 'compare-board'}>
         <ScenarioCard slot="a" scenario={compareA} quote={quoteA} />
         <ScenarioCard slot="b" scenario={compareB} quote={quoteB} />
       </div>
+      {quoteA && quoteB && <p className="compare-key-difference">B is {signed(quoteB.monthlyCents - quoteA.monthlyCents)} per month compared with A.</p>}
+      <details className="progressive-detail">
+        <summary>See the full comparison</summary>
       {quoteA && quoteB && (
         <dl className="figures delta-list">
           <div>
@@ -85,6 +88,7 @@ export function ComparePanel() {
         </dl>
       )}
       <p className="note">{tradeoff}</p>
+      </details>
     </aside>
   )
 }
@@ -110,9 +114,11 @@ function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Sc
   const vehicle = vehicleById(scenario.vehicleId)
   const title = listed && slot === 'b' && journey.listing
     ? journey.listing.title
-    : listed && slot === 'a' && customer
+    : slot === 'a' && customer && journey.offerKind === 'replacement'
       ? customer.vehicle
-      : vehicle.name
+      : journey.offerKind !== 'replacement' && customer
+        ? customer.vehicle
+        : vehicle.name
   const input = scenario.inputs
   const patch = (next: Partial<LoanInputs>) => updateCompare(slot, next)
   return (
@@ -123,6 +129,9 @@ function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Sc
         <p><a className="text-button" href={journey.listing.link} target="_blank" rel="noreferrer">View listing</a></p>
       )}
       <p className="payment small">{formatMoney(quote.monthlyCents)}<span>/ month</span></p>
+      <button type="button" className="cta" onClick={() => { if (continueWith(slot)) openFeature('financing') }}>Continue with {label} →</button>
+      <details className="progressive-detail">
+        <summary>Costs and terms</summary>
       <dl className="figures">
         <div>
           <dt>Price</dt>
@@ -149,6 +158,7 @@ function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Sc
           <dd>{formatMoney(quote.upfrontCents)}</dd>
         </div>
       </dl>
+      </details>
       <details>
         <summary>Edit scenario {label}</summary>
         <Field label="Price" value={input.price} min={8000} max={80000} step={50} onChange={(price) => patch({ price })} />
@@ -162,20 +172,7 @@ function ScenarioCard({ slot, scenario, quote }: { slot: 'a' | 'b'; scenario: Sc
           Roll taxes and fees into this scenario
         </label>
       </details>
-      <div className="panel-actions">
-        <button
-          type="button"
-          className="cta"
-          onClick={() => {
-            if (continueWith(slot)) openFeature('financing')
-          }}
-        >
-          Continue with {label}
-        </button>
-        <button type="button" className="ghost" onClick={() => replaceCompare(slot)}>
-          Replace with current
-        </button>
-      </div>
+      <button type="button" className="quiet-action" onClick={() => replaceCompare(slot)}>Replace with current</button>
     </section>
   )
 }

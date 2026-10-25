@@ -30,10 +30,11 @@ export function VisitPanel() {
         </div>
         <AnswerLink />
       </div>
-      <p className="fine">No provider is connected. A request stays in this session, with a clear success or a simulated failure. It is not sent to a dealer.</p>
-      <button type="button" className="ghost" onClick={fill}>
-        Fill from the next move
-      </button>
+      <p className="fine">Take a short summary and your questions to a dealer or service visit.</p>
+      <button type="button" className="cta" onClick={fill}>Use my recommended move →</button>
+      {journey.visitStatus === 'prepared' && <p className="note strong">Your visit summary is ready.</p>}
+      <details className="progressive-detail">
+        <summary>Review and edit my notes</summary>
       <label className="field">
         <span>Summary</span>
         <textarea className="quote-box" aria-label="Visit summary" value={journey.visitSummary} onChange={(event) => setVisitDraft(event.target.value, journey.visitQuestions)} />
@@ -42,7 +43,9 @@ export function VisitPanel() {
         <span>Open questions</span>
         <textarea className="quote-box" aria-label="Open questions" value={journey.visitQuestions} onChange={(event) => setVisitDraft(journey.visitSummary, event.target.value)} />
       </label>
-      <p className="eyebrow">Readiness · {done} of {CHECKLIST.length}</p>
+      </details>
+      <details className="progressive-detail">
+        <summary>What to bring · {done} of {CHECKLIST.length} ready</summary>
       <ul className="path-list">
         {CHECKLIST.map(([id, label]) => (
           <li key={id}>
@@ -53,6 +56,10 @@ export function VisitPanel() {
           </li>
         ))}
       </ul>
+      </details>
+      <details className="progressive-detail">
+        <summary>Save a practice request</summary>
+        <p className="fine">Demo only. Nothing is sent to a dealer.</p>
       <label className="check">
         <input type="checkbox" checked={fail} onChange={(event) => setFail(event.target.checked)} />
         Simulate a failed response
@@ -63,13 +70,11 @@ export function VisitPanel() {
             {request.label}
           </button>
         ))}
-        <button type="button" className="cta" onClick={() => window.print()}>
-          Export my comparison
-        </button>
       </div>
+      </details>
+      <button type="button" className="quiet-action" onClick={() => window.print()}>Print or save this plan</button>
       {journey.visitStatus === 'sent' && <p className="note strong">Stored on this device as a {journey.requestKind} request. Nothing left the browser.</p>}
       {journey.visitStatus === 'failed' && <p className="note">The local demo failed the {journey.requestKind} request on purpose. Change the failure switch and try again.</p>}
-      {journey.visitStatus === 'prepared' && <p className="fine">The summary is ready. Edit it, then choose a local request.</p>}
     </aside>
   )
 }

@@ -33,6 +33,16 @@ test('a buyout rate above the budget sends Maya back to turn-in', () => {
   assert.match(decision.changed ?? '', /12\.0%/)
 })
 
+test('when no monthly path fits, the explanation does not claim the payment fits', () => {
+  const input = baselineInput(customerById('maya'))
+  const decision = decide(edit(input, {}, {
+    preferences: { ...input.preferences, budget: 400 },
+  }))
+  assert.ok(decision.next.monthlyCents > decision.budgetCents)
+  assert.match(decision.reason, /No compared monthly option meets the budget/)
+  assert.doesNotMatch(decision.reason, /buyout payment fits/)
+})
+
 test('a buyout priced above the car value is not the next step', () => {
   const decision = decide(edit(baselineInput(customerById('maya')), { price: 30000 }))
   assert.equal(decision.next.id, 'keep')

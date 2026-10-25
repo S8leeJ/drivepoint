@@ -3,7 +3,6 @@ import { AnswerLink } from './AnswerLink.tsx'
 import { buildLoan, formatMoney, scheduleRow } from '../finance/loan.ts'
 import { setTimelineMonth, useScenario } from '../finance/scenario.ts'
 import { vehicleById } from '../finance/vehicles.ts'
-import { DecisionStrip } from './DecisionStrip.tsx'
 
 function monthTitle(month: number) {
   const date = new Date(Date.UTC(2026, 9 + month, 1))
@@ -32,10 +31,11 @@ export function TimelinePanel() {
         </div>
         <AnswerLink />
       </div>
-      <DecisionStrip />
-      <p className="fine">
-        {vehicle.name} on the north road. The car’s place on this segment is month {timelineMonth} of {term}. This schedule is the offer open in financing, not a payoff quote for a different contract.
-      </p>
+      <p className="fine">{vehicle.name} · illustrative offer over {term} months.</p>
+      <div className="answer-hero compact">
+        <p className="eyebrow">Balance left</p>
+        <p className="payment" aria-live="polite">{formatMoney(row.balanceCents)}</p>
+      </div>
       <label className="field">
         <span>Month</span>
         <strong>{timelineMonth}</strong>
@@ -61,11 +61,9 @@ export function TimelinePanel() {
           </button>
         ))}
       </div>
-      <dl className="figures">
-        <div>
-          <dt>Remaining balance</dt>
-          <dd>{formatMoney(row.balanceCents)}</dd>
-        </div>
+      <details className="progressive-detail">
+        <summary>See payment breakdown</summary>
+        <dl className="figures">
         <div>
           <dt>Principal paid</dt>
           <dd>{formatMoney(row.principalPaidCents)}</dd>
@@ -78,8 +76,9 @@ export function TimelinePanel() {
           <dt>Cumulative payments</dt>
           <dd>{formatMoney(row.cumulativePaidCents)}</dd>
         </div>
-      </dl>
-      <p>{quote.explanation}</p>
+        </dl>
+        <p>{quote.explanation}</p>
+      </details>
     </aside>
   )
 }

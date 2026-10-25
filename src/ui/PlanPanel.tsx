@@ -18,7 +18,6 @@ import {
 import { buildLoan, formatMoney, formatRate } from '../finance/loan.ts'
 import { compareHorizon } from '../finance/plan.ts'
 import { useScenario } from '../finance/scenario.ts'
-import { DecisionStrip } from './DecisionStrip.tsx'
 import { Field } from './Fields.tsx'
 
 const PRIORITIES = [
@@ -61,16 +60,16 @@ export function PlanPanel() {
       <div className="panel-head">
         <div>
           <p className="eyebrow">Your situation</p>
-          <h2>Adjust the numbers</h2>
+          <h2>Make it yours</h2>
         </div>
         <AnswerLink />
       </div>
-      <DecisionStrip />
-      <p className="fine">Skip anything. Empty ownership costs stay at zero until you enter them. The next move recalculates from these answers.</p>
-
-      <details open>
-        <summary>Budget, cash, and mileage</summary>
-        <Field label="Monthly budget" value={preferences.budget} min={0} max={2500} step={10} display={formatMoney(Math.round(preferences.budget * 100))} onChange={(budget) => setPreferences({ budget })} />
+      <p className="fine">Changes update your next move right away.</p>
+      <div className="simple-field">
+        <Field label="My monthly budget" value={preferences.budget} min={0} max={2500} step={10} display={formatMoney(Math.round(preferences.budget * 100))} onChange={(budget) => setPreferences({ budget })} />
+      </div>
+      <details className="progressive-detail">
+        <summary>Cash, mileage, and what matters most</summary>
         <Field label="Cash on hand" value={preferences.upfrontCash} min={0} max={80000} step={50} display={formatMoney(Math.round(preferences.upfrontCash * 100))} onChange={(upfrontCash) => setPreferences({ upfrontCash })} />
         <button type="button" className="ghost" onClick={applyUpfrontCash}>Use cash as the down payment</button>
         <Field label="Miles per year" value={preferences.annualMiles} min={0} max={40000} step={100} display={`${Math.round(preferences.annualMiles).toLocaleString('en-US')} miles`} onChange={(annualMiles) => setPreferences({ annualMiles })} />
@@ -83,8 +82,8 @@ export function PlanPanel() {
         </div>
       </details>
 
-      <details open>
-        <summary>Monthly ownership</summary>
+      <details className="progressive-detail">
+        <summary>Include insurance, fuel, and upkeep</summary>
         <Field label="Insurance" value={ownership.insurance} min={0} max={800} step={5} onChange={(insurance) => setOwnership({ insurance })} />
         <Field label="Fuel or charging" value={ownership.fuel} min={0} max={800} step={5} onChange={(fuel) => setOwnership({ fuel })} />
         <Field label="Maintenance" value={ownership.maintenance} min={0} max={400} step={5} onChange={(maintenance) => setOwnership({ maintenance })} />
@@ -101,13 +100,15 @@ export function PlanPanel() {
         </dl>
       </details>
 
-      <details>
-        <summary>Mileage and energy</summary>
+      <details className="progressive-detail">
+        <summary>More ways to plan</summary>
+        <details>
+          <summary>Mileage and energy</summary>
         <Field label="Miles per gallon" value={energy.mpg} min={1} max={80} step={0.5} onChange={(mpg) => setEnergy({ mpg })} />
         <Field label="Price per gallon" value={energy.gallonPrice} min={0} max={8} step={0.05} display={formatMoney(Math.round(energy.gallonPrice * 100))} onChange={(gallonPrice) => setEnergy({ gallonPrice })} />
         <p>At {Math.round(preferences.annualMiles).toLocaleString('en-US')} miles a year, fuel is about {formatMoney(Math.round(fuelEstimate * 100))} a month. A lease also uses this mileage for extra-mile charges.</p>
         <button type="button" className="ghost" onClick={applyFuelEstimate}>Use this as the fuel cost</button>
-      </details>
+        </details>
 
       <details>
         <summary>Buy versus lease</summary>
@@ -175,6 +176,7 @@ export function PlanPanel() {
           That is {formatMoney(Math.round(saved * 100))} more down. On the uncertain future price, the illustrative payment would be {formatMoney(preview.monthlyCents)} a month.
         </p>
         <button type="button" className="ghost" onClick={applySavingsCash}>Add the savings to today’s down payment</button>
+      </details>
       </details>
     </aside>
   )

@@ -17,9 +17,7 @@ export function suggestions(decision: Decision) {
   return [
     'Why is this the next step?',
     'How much of this is interest?',
-    decision.overBudget ? 'Why is the month over budget?' : 'Does this fit the budget?',
-    'What should I confirm before a visit?',
-    'Compare this with the other path',
+    decision.overBudget || decision.next.monthlyCents > decision.budgetCents ? 'Why is the month over budget?' : 'Does this fit the budget?',
   ]
 }
 
@@ -36,7 +34,9 @@ export function answerQuestion(question: string, decision: Decision): Answer {
     )
   }
   if (/budget|afford|month over|too much/.test(asked)) {
-    const fit = decision.overBudget
+    const fit = decision.next.monthlyCents > decision.budgetCents
+      ? `The ${formatMoney(decision.next.monthlyCents)} payment is above the ${formatMoney(decision.budgetCents)} budget. Compare the other options before choosing.`
+      : decision.overBudget
       ? `The full month is ${formatMoney(decision.fullMonthlyCents)}, which is over the ${formatMoney(decision.budgetCents)} budget once ownership costs are included.`
       : `The path’s payment fits a ${formatMoney(decision.budgetCents)} budget. Ownership costs are ${formatMoney(decision.ownershipMonthlyCents)} on top of that.`
     return reply(fit, 'plan', 'Edit the plan')
@@ -52,7 +52,7 @@ export function answerQuestion(question: string, decision: Decision): Answer {
   }
   if (/why|next|recommend|should/.test(asked)) {
     const sourced = decision.assumptions.find((item) => item.startsWith('Market value') || item.startsWith('The listing sample') || item.startsWith('The shopping sample'))
-    const body = decision.changed ? `${decision.reason} ${decision.changed}` : decision.reason
+    const body = next.line
     return reply(sourced ? `${body} ${sourced}` : body, 'move', 'Open the full next move')
   }
   return reply(

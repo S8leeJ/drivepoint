@@ -45,20 +45,25 @@ export function AssistPanel() {
     <aside className="feature-panel" aria-label="Explain the numbers">
       <div className="panel-head">
         <div>
-          <p className="eyebrow">Explain</p>
-          <h2>Ask about these numbers</h2>
+          <p className="eyebrow">Plain-language answer</p>
+          <h2>Why this move?</h2>
         </div>
         <AnswerLink />
       </div>
-      <p className="fine">Answers use the numbers in this session. They are not a credit decision and they do not call out for new data.</p>
-      <div className="choice-row">
+      <p className="answer-explainer" aria-live="polite">{answer.text}</p>
+      {answer.action && answer.action !== 'move' && answer.actionLabel && (
+        <button type="button" className="cta" onClick={() => run(answer.action!)}>{answer.actionLabel} →</button>
+      )}
+      <details className="progressive-detail">
+        <summary>Ask another question</summary>
+        <div className="choice-row">
         {suggestions(decision).map((prompt) => (
           <button key={prompt} type="button" className="customer" onClick={() => ask(prompt)}>
             {prompt}
           </button>
         ))}
-      </div>
-      <label className="field">
+        </div>
+        <label className="field">
         <span>Your question</span>
         <input
           type="text"
@@ -69,16 +74,10 @@ export function AssistPanel() {
             if (event.key === 'Enter' && question.trim()) ask(question.trim())
           }}
         />
-      </label>
-      <button type="button" className="ghost" onClick={() => question.trim() && ask(question.trim())}>
-        Ask
-      </button>
-      <p aria-live="polite">{answer.text}</p>
-      {answer.action && answer.actionLabel && (
-        <button type="button" className="cta" onClick={() => run(answer.action!)}>
-          {answer.actionLabel}
-        </button>
-      )}
+        </label>
+        <button type="button" className="ghost" onClick={() => question.trim() && ask(question.trim())}>Ask</button>
+      </details>
+      <p className="fine">Uses only this sample’s numbers. Not a credit decision.</p>
     </aside>
   )
 }

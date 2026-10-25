@@ -42,3 +42,13 @@ test('an unrelated question does not invent a new number', () => {
   assert.match(answer.text, /numbers already on screen/)
   assert.match(answer.text, /service/i)
 })
+
+test('budget answer flags a payment above the entered budget', () => {
+  const input = baselineInput(customerById('maya'))
+  const decision = decide(edit(input, {
+    preferences: { ...input.preferences, budget: 400 },
+  }))
+  const answer = answerQuestion('Does this fit the budget?', decision)
+  assert.match(answer.text, /above the \$400 budget/)
+  assert.doesNotMatch(answer.text, /payment fits/)
+})

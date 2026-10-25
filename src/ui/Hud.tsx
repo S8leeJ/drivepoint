@@ -7,7 +7,7 @@ import {
   FEATURES,
   nearestFeature,
 } from '../experience/destinations.ts'
-import { openFeature, skipTravel, travelProgress, useSession, cancelTravel, openOverlay } from '../experience/session.ts'
+import { backToDrive, openFeature, skipTravel, travelProgress, useSession, cancelTravel, openOverlay } from '../experience/session.ts'
 import { CUSTOMERS } from '../finance/customers.ts'
 import { getJourney } from '../finance/journey.ts'
 import { getMarketSnapshot } from '../finance/liveMarket.ts'
@@ -68,8 +68,10 @@ export function Hud() {
   const [gear, setGear] = useState(telemetry.gear)
   const [muted, setMuted] = useState(drive.muted)
   const [activeStop, setActiveStop] = useState<RoadStop | null>(null)
+  const [dismissedStop, setDismissedStop] = useState<RoadStop['id'] | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [arrival, setArrival] = useState<(typeof FEATURES)['financing'] | null>(null)
+  const [dismissedFeature, setDismissedFeature] = useState<keyof typeof FEATURES | null>(null)
   const [progress, setProgress] = useState(0)
   const [coach, setCoach] = useState(true)
   const locked = experience.mode === 'feature' || experience.mode === 'timeline' || experience.overlay != null
@@ -91,8 +93,10 @@ export function Hud() {
       const stopArrived = nearStop.distance <= OPEN_RADIUS && telemetry.speedKmh <= OPEN_SPEED_KMH
       const featureArrived = nearFeature.distance <= FEATURE_OPEN_RADIUS && telemetry.speedKmh <= FEATURE_OPEN_SPEED_KMH
       const showFeature = featureArrived && (!stopArrived || nearFeature.distance <= nearStop.distance)
-      setActiveStop(stopArrived && !showFeature ? nearStop.stop : null)
-      setArrival(showFeature ? nearFeature.feature : null)
+      if (dismissedStop && nearStop.distance > OPEN_RADIUS + 4) setDismissedStop(null)
+      if (dismissedFeature && nearFeature.distance > FEATURE_OPEN_RADIUS + 4) setDismissedFeature(null)
+      setActiveStop(stopArrived && !showFeature && nearStop.stop.id !== dismissedStop ? nearStop.stop : null)
+      setArrival(showFeature && nearFeature.feature.id !== dismissedFeature ? nearFeature.feature : null)
       const featureHint = !featureArrived && nearFeature.distance <= FEATURE_HINT_RADIUS
       const stopHint = !stopArrived && nearStop.distance <= HINT_RADIUS
       if (featureHint && (!stopHint || nearFeature.distance < nearStop.distance)) {
@@ -105,16 +109,40 @@ export function Hud() {
       }
     }, 80)
     return () => window.clearInterval(timer)
-  }, [experience.mode])
+  }, [experience.mode, dismissedStop, dismissedFeature])
+
+  const dismissRoadside = () => {
+    const near = nearestStop(telemetry.x, telemetry.z)
+    setDismissedStop(near.distance <= OPEN_RADIUS + 4 ? near.stop.id : null)
+    setActiveStop(null)
+  }
+
+  const dismissArrival = () => {
+    const near = nearestFeature(telemetry.x, telemetry.z)
+    setDismissedFeature(near.distance <= FEATURE_OPEN_RADIUS + 4 ? near.feature.id : null)
+    setArrival(null)
+  }
+
+  const returnToDrive = () => {
+    dismissRoadside()
+    dismissArrival()
+    backToDrive()
+  }
 
   const traveling = experience.mode === 'guided' && experience.travelFeature
   const place = traveling ? FEATURES[experience.travelFeature!].place : ''
   const driving = experience.mode === 'manual' && !experience.overlay
+  const showExit = Boolean(experience.overlay) || experience.mode !== 'manual'
 
   if (!experience.entered) return <Entry />
 
   return (
     <div className={locked ? 'hud driving-locked' : 'hud'}>
+      {showExit && (
+        <button type="button" className="exit-drive" onClick={returnToDrive} aria-label="Close and return to driving">
+          <span aria-hidden="true">×</span> Back to drive
+        </button>
+      )}
       {driving && (
         <div className="drive-bar">
           <button type="button" className="nav-pill" onClick={() => openOverlay('move')}>
@@ -134,15 +162,11 @@ export function Hud() {
       )}
       {driving && coach && (
         <div className="coach">
-          <p className="eyebrow">Driving is optional</p>
-          <h2>The answer stays put.</h2>
-          <p>W A S D or the arrows move the car. Space brakes. R puts it back on the road. My answer brings the recommendation back.</p>
-          <button type="button" className="cta" onClick={() => setCoach(false)}>
-            Keep driving
-          </button>
+          <p>Use <strong>WASD</strong> or arrows to drive. Tap <strong>My answer</strong> anytime.</p>
+          <button type="button" className="quiet-action" onClick={() => setCoach(false)}>Got it</button>
         </div>
       )}
-      {activeStop && !locked && <NextMove stopId={activeStop.id} />}
+      {activeStop && !locked && <NextMove stopId={activeStop.id} onDismiss={dismissRoadside} />}
       {experience.overlay === 'move' && <MovePanel />}
       {experience.overlay === 'plan' && <PlanPanel />}
       {experience.overlay === 'assist' && <AssistPanel />}
@@ -180,6 +204,7 @@ export function Hud() {
       )}
       {driving && arrival && (
         <div className="arrival-card">
+          <button type="button" className="arrival-close" onClick={dismissArrival} aria-label="Close destination tip">×</button>
           <p className="eyebrow">{arrival.place}</p>
           <h2>{arrival.label}</h2>
           <p>Same numbers as your answer.</p>

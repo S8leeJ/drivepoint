@@ -1,46 +1,32 @@
 import type { StopId } from '../finance/decide.ts'
-import { formatMoney } from '../finance/loan.ts'
 import { useDecision } from '../finance/journey.ts'
 import { useMarket } from '../finance/liveMarket.ts'
 import { captionFor } from '../finance/market.ts'
 import { openOverlay } from '../experience/session.ts'
-import { followNext } from './actions.ts'
 
-export function NextMove({ stopId }: { stopId: StopId }) {
+export function NextMove({ stopId, onDismiss }: { stopId: StopId; onDismiss: () => void }) {
   const decision = useDecision()
   const market = useMarket()
   const path = decision.stops[stopId]
-  const strongest = path.id === decision.next.id
   const fallback = stopId === 'home' ? 'Home' : stopId === 'dealer' ? 'Dealer' : 'Service'
   const eyebrow = captionFor(stopId, fallback, market.snapshot)
 
   return (
     <aside className="next-move">
+      <button type="button" className="next-move-close" onClick={onDismiss} aria-label="Close roadside tip">×</button>
       <p className="eyebrow">{eyebrow}</p>
       <h2>{path.title}</h2>
-      <p className={strongest ? 'note strong' : 'note'}>{path.because}</p>
-      <p>{path.summary}</p>
-      <dl className="figures">
-        {path.figures.map((figure) => (
-          <div key={figure.label}>
-            <dt>{figure.label}</dt>
-            <dd>{figure.value}</dd>
-          </div>
-        ))}
-      </dl>
-      <div className="recommend-block">
-        <p className="eyebrow">Recommended next step</p>
-        <p>
-          {decision.next.title} · {formatMoney(decision.next.displayCents)}
-          {decision.next.cadence === 'month' ? ' / month' : ''}
-        </p>
-        <button type="button" className="cta" onClick={() => followNext(decision)}>
-          {decision.cta}
-        </button>
-        <button type="button" className="ghost" onClick={() => openOverlay('move')}>
-          Full recommendation
-        </button>
-      </div>
+      <p>{path.id === decision.next.id ? 'This matches your current next move.' : 'See how this stop fits your situation.'}</p>
+      <button type="button" className="cta" onClick={() => openOverlay('move')}>See my answer →</button>
+      <details className="progressive-detail">
+        <summary>See the numbers</summary>
+        <p>{path.summary}</p>
+        <dl className="figures">
+          {path.figures.map((figure) => (
+            <div key={figure.label}><dt>{figure.label}</dt><dd>{figure.value}</dd></div>
+          ))}
+        </dl>
+      </details>
     </aside>
   )
 }

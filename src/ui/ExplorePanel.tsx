@@ -4,7 +4,6 @@ import { clearListing, getJourney, shopVehicle } from '../finance/journey.ts'
 import { formatMoney } from '../finance/loan.ts'
 import { addActiveToCompare, chooseVehicle, setColor, setInputs, useScenario } from '../finance/scenario.ts'
 import { PAINTS, VEHICLES, vehicleById, type PaintId } from '../finance/vehicles.ts'
-import { DecisionStrip } from './DecisionStrip.tsx'
 
 export function ExplorePanel() {
   const { active, notice } = useScenario()
@@ -20,8 +19,7 @@ export function ExplorePanel() {
         </div>
         <AnswerLink />
       </div>
-      <DecisionStrip />
-      <p className="fine">Drag to orbit the car. Choosing a vehicle replaces the open offer with that demo price. Illustrative specifications, not a manufacturer listing.</p>
+      <p className="fine">Drag to turn the car. Pick one to see its payment.</p>
       {notice && <p className="note strong">{notice}</p>}
       <div className="choice-row" role="listbox" aria-label="Vehicles">
         {VEHICLES.map((option) => (
@@ -55,7 +53,18 @@ export function ExplorePanel() {
           />
         ))}
       </div>
-      <dl className="figures">
+      <p className="payment small">{formatMoney(Math.round(active.inputs.price * 100))}<span>sample price</span></p>
+      <div className="panel-actions">
+        <button type="button" className="cta" onClick={() => openFeature('financing')}>
+          See this payment →
+        </button>
+        <button type="button" className="ghost" onClick={addActiveToCompare}>
+          Save to compare
+        </button>
+      </div>
+      <details className="progressive-detail">
+        <summary>About this car and price</summary>
+        <dl className="figures">
         <div>
           <dt>Illustrative price</dt>
           <dd>{formatMoney(Math.round(vehicle.price * 100))}</dd>
@@ -72,21 +81,14 @@ export function ExplorePanel() {
           <dt>Financing price</dt>
           <dd>{formatMoney(Math.round(active.inputs.price * 100))}</dd>
         </div>
-      </dl>
-      <p>{vehicle.note}</p>
-      {priceChanged && (
+        </dl>
+        <p>{vehicle.note}</p>
+        {priceChanged && (
         <p className="note">
           The financing price is {formatMoney(Math.round(active.inputs.price * 100))} because it was edited. Interest rate, term, taxes, and fees are unchanged. Choosing a different vehicle replaces the price with that model’s illustrative price.
         </p>
-      )}
-      <div className="panel-actions">
-        <button type="button" className="cta" onClick={() => openFeature('financing')}>
-          Choose for financing
-        </button>
-        <button type="button" className="ghost" onClick={addActiveToCompare}>
-          Add to compare
-        </button>
-      </div>
+        )}
+      </details>
     </aside>
   )
 }

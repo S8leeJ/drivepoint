@@ -192,7 +192,7 @@ export function loadCustomer(id: Customer['id']) {
     remember('Chose a customer', customer.name)
     applyScenario(
       { ...liveVehicle(), inputs: offer.inputs },
-      `${customer.name}'s starting ${offer.kind === 'buyout' ? 'buyout' : 'refinance'} offer is loaded. The car in the valley stays the one you are driving.`,
+      `${customer.name}'s sample ${offer.kind === 'buyout' ? 'buyout' : 'refinance'} is ready.`,
     )
     emit()
   }

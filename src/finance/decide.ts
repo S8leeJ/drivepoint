@@ -546,6 +546,7 @@ function pick(paths: MoneyPath[], priority: Priority) {
 
 function closing(next: MoneyPath, priority: Priority) {
   if (next.id === 'service') return 'Staying is the stronger contract, and this service is inside the window, so booking it is the next step.'
+  if (!next.eligible && next.cadence === 'month') return 'No compared monthly option meets the budget and other checks. Review the assumptions before acting.'
   if (next.id === 'keep' && next.sameCar) return 'Staying on the current loan is the next step.'
   if (next.id === 'keep') return 'Turning the car in is the next step.'
   if (next.id === 'buyout') return 'Keeping the current car is the priority, and the buyout payment fits, so the buyout is the next step.'
