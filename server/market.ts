@@ -3,12 +3,13 @@ import { customerById, type Customer } from '../src/finance/customers.ts'
 import type { LoanInputs } from '../src/finance/loan.ts'
 import {
   assembleSnapshot,
+  forSaleQuery,
   inventoryQuery,
-  ownCarQuery,
   plausibleVehicle,
-  priceCeiling,
+  readEbay,
   readPlace,
-  readShopping,
+  readVehicles,
+  vehicleIdFromTitle,
   type MarketSnapshot,
   type PricedRow,
   type ShopperId,
@@ -81,9 +82,8 @@ async function locationFor(zip: string, key: string) {
   return zip
 }
 
-function shoppingRows(payload: unknown) {
-  if (!payload || typeof payload !== 'object') return []
-  return readShopping((payload as { shopping_results?: unknown }).shopping_results)
+function carRows(rows: PricedRow[]) {
+  return rows.filter((row) => row.price <= 150000 && plausibleVehicle(row) && vehicleIdFromTitle(row.title) != null)
 }
 
 function firstPlace(payload: unknown) {
@@ -105,16 +105,15 @@ async function loadSnapshot(input: {
   budget: number
   key: string
 }) {
-  const ceiling = Math.round(priceCeiling(input.offer, input.budget))
   const location = await locationFor(input.zip, input.key)
   const [own, inventory, dealer, service] = await Promise.all([
     serp({
-      engine: 'google_shopping',
-      q: ownCarQuery(input.customer.id),
+      engine: 'google_ads',
+      q: forSaleQuery(input.customer.id),
       location,
     }, input.key),
     serp({
-      engine: 'google_shopping',
+      engine: 'google_ads',
       q: inventoryQuery(input.body),
       location,
     }, input.key),
@@ -133,8 +132,21 @@ async function loadSnapshot(input: {
       z: '13',
     }, input.key),
   ])
-  const rows: PricedRow[] = [...shoppingRows(own), ...shoppingRows(inventory)]
-    .filter((row) => row.price <= ceiling && plausibleVehicle(row))
+  let rows = carRows([...readVehicles(own), ...readVehicles(inventory)])
+  if (rows.length === 0) {
+    try {
+      const ebay = await serp({
+        engine: 'ebay',
+        _nkw: forSaleQuery(input.customer.id).replace(/ for sale$/, ''),
+        _udlo: '4000',
+        _stpos: input.zip,
+        category_id: '6001',
+      }, input.key)
+      rows = carRows(readEbay(ebay))
+    } catch (error) {
+      console.error(`Market listing fallback failed: ${safeMessage(error)}`)
+    }
+  }
   return assembleSnapshot({
     zip: input.zip,
     customerId: input.customer.id,

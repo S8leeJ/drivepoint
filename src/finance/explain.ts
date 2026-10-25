@@ -51,7 +51,7 @@ export function answerQuestion(question: string, decision: Decision): Answer {
     return reply(decision.questions.join(' '), 'move', 'See the open questions')
   }
   if (/why|next|recommend|should/.test(asked)) {
-    const sourced = decision.assumptions.find((item) => item.startsWith('Market value') || item.startsWith('The shopping sample'))
+    const sourced = decision.assumptions.find((item) => item.startsWith('Market value') || item.startsWith('The listing sample') || item.startsWith('The shopping sample'))
     const body = decision.changed ? `${decision.reason} ${decision.changed}` : decision.reason
     return reply(sourced ? `${body} ${sourced}` : body, 'move', 'Open the full next move')
   }

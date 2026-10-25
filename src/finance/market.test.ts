@@ -7,6 +7,7 @@ import {
   assembleSnapshot,
   confirmQuestion,
   deskLabel,
+  forSaleQuery,
   hoursLine,
   inventoryQuery,
   judgeMedian,
@@ -16,7 +17,9 @@ import {
   plausibleVehicle,
   priceCeiling,
   rankListings,
+  readEbay,
   readShopping,
+  readVehicles,
   sameCar,
   vehicleIdFromTitle,
   type PricedRow,
@@ -85,7 +88,7 @@ test('a mileage-filtered median inside the band is the market value', () => {
   assert.equal(snapshot.comps.length, 2)
   assert.equal(snapshot.marketValue, 27500)
   assert.equal(snapshot.sample, 'accepted')
-  assert.match(marketNote(snapshot) ?? '', /Market value \$27,500, median of 2 listings within 8,000 miles, Google Shopping, \d{1,2}:\d{2}[ap]m\./)
+  assert.match(marketNote(snapshot) ?? '', /Market value \$27,500, median of 2 listings within 8,000 miles, cars for sale, \d{1,2}:\d{2}[ap]m\./)
 })
 
 test('a median outside 40 to 160 percent of the anchor is rejected', () => {
@@ -94,7 +97,7 @@ test('a median outside 40 to 160 percent of the anchor is rejected', () => {
   assert.equal(judged.sample, 'rejected')
   assert.equal(
     marketNote({ marketValue: null, comps: [], sample: 'rejected', fetchedAt: 0 }),
-    'The shopping sample was rejected, so the contract value stays in place.',
+    'The listing sample was rejected, so the contract value stays in place.',
   )
 })
 
@@ -133,8 +136,40 @@ test('desk copy uses the maps place, and the queries stay fixed', () => {
   assert.equal(deskLabel('Dealer', null), 'Dealer')
   assert.equal(ownCarQuery('maya'), '2023 Toyota RAV4 Hybrid XLE')
   assert.equal(ownCarQuery('jordan'), '2021 Toyota Camry SE')
-  assert.equal(inventoryQuery('suv'), 'Toyota SUV')
+  assert.equal(forSaleQuery('maya'), '2023 Toyota RAV4 for sale')
+  assert.equal(forSaleQuery('jordan'), '2021 Toyota Camry for sale')
+  assert.equal(inventoryQuery('suv'), 'Toyota RAV4 for sale')
+  assert.equal(inventoryQuery('sedan'), 'Toyota Camry for sale')
+  assert.equal(inventoryQuery('hatch'), 'Toyota Corolla hatchback for sale')
   assert.equal(sameCar('2023 Toyota RAV4 Hybrid', 'maya'), true)
   assert.equal(sameCar('2021 Toyota Camry SE', 'maya'), false)
   assert.equal(confirmQuestion('Austin Toyota'), 'Confirm with Austin Toyota whether the advertised price includes fees.')
+})
+
+test('vehicle ads and ebay listings become priced cars', () => {
+  const vehicles = readVehicles({
+    ads: [
+      {
+        title: 'Vehicles for sale',
+        vehicles_for_sale: [
+          { title: 'Floor mats', extracted_price: 80, dealership: 'Parts' },
+          { title: '2023 Toyota RAV4 Hybrid XLE', price: '$31,400', mileage: '28k mi', dealership: 'Toyota of Frisco', link: 'https://example.com/rav' },
+        ],
+      },
+    ],
+  })
+  assert.equal(vehicles.length, 2)
+  assert.equal(vehicles[1].price, 31400)
+  assert.equal(vehicles[1].mileage, 28000)
+  assert.equal(vehicles[1].source, 'Toyota of Frisco')
+  const ebay = readEbay({
+    organic_results: [
+      { title: '2021 Toyota Camry SE 54,200 miles', price: { extracted: 18400 }, seller: { username: 'northtexas' }, link: 'https://example.com/camry' },
+      { title: 'No price Camry', seller: { username: 'empty' } },
+    ],
+  })
+  assert.equal(ebay.length, 1)
+  assert.equal(ebay[0].price, 18400)
+  assert.equal(ebay[0].mileage, 54200)
+  assert.equal(ebay[0].source, 'northtexas')
 })

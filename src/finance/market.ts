@@ -51,10 +51,14 @@ export function ownCarQuery(id: ShopperId) {
   return id === 'maya' ? '2023 Toyota RAV4 Hybrid XLE' : '2021 Toyota Camry SE'
 }
 
+export function forSaleQuery(id: ShopperId) {
+  return id === 'maya' ? '2023 Toyota RAV4 for sale' : '2021 Toyota Camry for sale'
+}
+
 export function inventoryQuery(body: VehicleId) {
-  if (body === 'hatch') return 'Toyota Hatchback'
-  if (body === 'sedan') return 'Toyota Sedan'
-  return 'Toyota SUV'
+  if (body === 'hatch') return 'Toyota Corolla hatchback for sale'
+  if (body === 'sedan') return 'Toyota Camry for sale'
+  return 'Toyota RAV4 for sale'
 }
 
 export function sameCar(title: string, id: ShopperId) {
@@ -124,7 +128,7 @@ export function rankListings(rows: PricedRow[], offer: LoanInputs, budget: numbe
       title: row.title.trim(),
       price: row.price,
       mileage: row.mileage,
-      source: row.source.trim() || 'Google Shopping',
+      source: row.source.trim() || 'Dealer',
       link: row.link,
       vehicleId: vehicleIdFromTitle(row.title),
       monthlyCents: buildLoan({ ...offer, price: row.price }).monthlyCents,
@@ -214,9 +218,9 @@ export function formatClock(at: number) {
 export function marketNote(snapshot: Pick<MarketSnapshot, 'marketValue' | 'comps' | 'sample' | 'fetchedAt'>) {
   if (snapshot.sample === 'accepted' && snapshot.marketValue != null) {
     const value = formatMoney(Math.round(snapshot.marketValue * 100))
-    return `Market value ${value}, median of ${snapshot.comps.length} listings within 8,000 miles, Google Shopping, ${formatClock(snapshot.fetchedAt)}.`
+    return `Market value ${value}, median of ${snapshot.comps.length} listings within 8,000 miles, cars for sale, ${formatClock(snapshot.fetchedAt)}.`
   }
-  if (snapshot.sample === 'rejected') return 'The shopping sample was rejected, so the contract value stays in place.'
+  if (snapshot.sample === 'rejected') return 'The listing sample was rejected, so the contract value stays in place.'
   return null
 }
 
@@ -289,12 +293,86 @@ export function readShopping(hits: unknown): PricedRow[] {
       : typeof row.product_link === 'string'
         ? row.product_link
         : ''
-    const source = typeof row.source === 'string' && row.source.trim() ? row.source.trim() : 'Google Shopping'
+    const source = typeof row.source === 'string' && row.source.trim() ? row.source.trim() : 'Dealer'
     rows.push({
       title,
       price,
       mileage: parseMileage(title, extensions),
       source,
+      link,
+    })
+  }
+  return rows
+}
+
+function dollars(value: unknown, raw?: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value
+  const text = typeof value === 'string' ? value : typeof raw === 'string' ? raw : ''
+  const parsed = Number(text.replace(/[$,]/g, ''))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : Number.NaN
+}
+
+export function readVehicles(payload: unknown): PricedRow[] {
+  if (!payload || typeof payload !== 'object') return []
+  const ads = (payload as { ads?: unknown }).ads
+  if (!Array.isArray(ads)) return []
+  const rows: PricedRow[] = []
+  for (const ad of ads) {
+    if (!ad || typeof ad !== 'object') continue
+    const vehicles = (ad as { vehicles_for_sale?: unknown }).vehicles_for_sale
+    if (!Array.isArray(vehicles)) continue
+    for (const hit of vehicles) {
+      if (!hit || typeof hit !== 'object') continue
+      const row = hit as Record<string, unknown>
+      const title = typeof row.title === 'string' ? row.title.trim() : ''
+      const price = dollars(row.extracted_price, row.price)
+      if (!title || !Number.isFinite(price)) continue
+      const mileageText = typeof row.mileage === 'string' ? row.mileage : ''
+      const mileage = typeof row.extracted_mileage === 'number' && row.extracted_mileage >= 100
+        ? row.extracted_mileage
+        : parseMileage(title, mileageText ? [mileageText] : [])
+      const dealer = typeof row.dealership === 'string' ? row.dealership.trim() : ''
+      const link = typeof row.link === 'string' ? row.link : ''
+      rows.push({
+        title,
+        price,
+        mileage,
+        source: dealer || 'Dealer',
+        link,
+      })
+    }
+  }
+  return rows
+}
+
+export function readEbay(payload: unknown): PricedRow[] {
+  if (!payload || typeof payload !== 'object') return []
+  const results = (payload as { organic_results?: unknown }).organic_results
+  if (!Array.isArray(results)) return []
+  const rows: PricedRow[] = []
+  for (const hit of results) {
+    if (!hit || typeof hit !== 'object') continue
+    const row = hit as Record<string, unknown>
+    const title = typeof row.title === 'string' ? row.title.trim() : ''
+    const priceRecord = row.price
+    const price = priceRecord && typeof priceRecord === 'object'
+      ? dollars(
+        (priceRecord as { extracted?: unknown; from?: { extracted?: unknown } }).extracted
+          ?? (priceRecord as { from?: { extracted?: unknown } }).from?.extracted,
+        (priceRecord as { raw?: unknown }).raw,
+      )
+      : Number.NaN
+    if (!title || !Number.isFinite(price)) continue
+    const subtitle = typeof row.subtitle === 'string' ? row.subtitle : ''
+    const seller = row.seller && typeof row.seller === 'object'
+      ? (row.seller as { username?: unknown }).username
+      : null
+    const link = typeof row.link === 'string' ? row.link : ''
+    rows.push({
+      title,
+      price,
+      mileage: parseMileage(title, subtitle ? [subtitle] : []),
+      source: typeof seller === 'string' && seller.trim() ? seller.trim() : 'eBay',
       link,
     })
   }

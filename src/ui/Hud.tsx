@@ -43,6 +43,40 @@ function approachHint(feature: (typeof FEATURES)[keyof typeof FEATURES]) {
   return `${top.title} · ${formatMoney(top.monthlyCents)} — slow down to open`
 }
 
+function SoundIcon({ muted }: { muted: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M4 9.5v5h3.4L12 19V5L7.4 9.5H4z" />
+      {muted ? (
+        <path
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          d="M16 9.5l5 5M21 9.5l-5 5"
+        />
+      ) : (
+        <>
+          <path
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            d="M15.6 9.2a3.8 3.8 0 010 5.6"
+          />
+          <path
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            d="M18.2 6.8a7 7 0 010 10.4"
+          />
+        </>
+      )}
+    </svg>
+  )
+}
+
 function Pedal({ control, label }: { control: HeldControl; label: string }) {
   return (
     <button
@@ -193,13 +227,16 @@ export function Hud() {
         </div>
         <button
           type="button"
-          className="mute nav-pill"
+          className="mute"
+          aria-pressed={muted}
+          aria-label={muted ? 'Sound off' : 'Sound on'}
+          title={muted ? 'Sound off' : 'Sound on'}
           onClick={() => {
             engine.ensure()
             setMuted(toggleMute())
           }}
         >
-          {muted ? 'Sound off' : 'Sound on'}
+          <SoundIcon muted={muted} />
         </button>
       </div>
       {!locked && !activeStop && !arrival && (

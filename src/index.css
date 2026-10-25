@@ -83,10 +83,11 @@ h1 {
 }
 
 .mute {
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  padding: 10px 16px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   cursor: pointer;
 }
 
@@ -609,7 +610,20 @@ html, body, #root, .app { background: #e7aa71; }
 .nav-pill.active { background: #244a37; border-color: #b6c6a2; }
 .feature-nav .nav-pill:nth-child(2) { background: #efc982; color: #294331; border-color: #efc982; }
 .feature-nav .nav-pill:nth-child(2).active { background: #244a37; color: #fff5e4; }
-.mute.nav-pill { flex-shrink: 0; }
+.mute {
+  position: static;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 245, 223, .32);
+  background: rgba(47, 52, 38, .65);
+  box-shadow: 0 8px 30px rgba(29, 25, 24, .12);
+  backdrop-filter: blur(16px);
+  color: #fff5e4;
+  transition: transform .18s ease, background .18s ease;
+}
+.mute svg { display: block; }
+.mute:focus { outline: none; }
+.mute:focus-visible { outline: 2px solid #f1cf91; outline-offset: 3px; }
+.mute[aria-pressed='true'] { color: #f1cf91; }
 .roadside-callout {
   position: absolute;
   top: 28%;
@@ -711,7 +725,7 @@ html, body, #root, .app { background: #e7aa71; }
   .top-actions { top: 144px; left: 18px; right: 18px; max-width: none; justify-content: space-between; gap: 5px; }
   .feature-nav { justify-content: flex-start; gap: 5px; }
   .nav-pill { padding: 7px 9px; font-size: 11px; }
-  .mute.nav-pill { position: absolute; right: 0; top: -126px; }
+  .mute { position: absolute; right: 0; top: -126px; width: 38px; height: 38px; }
   .roadside-callout { top: 29%; right: 20px; width: 195px; padding: 12px 15px; }
   .roadside-callout strong { font-size: 14px; }
   .drive-note { display: none; }

@@ -45,7 +45,7 @@ export function MarketPanel() {
           Back to driving
         </button>
       </div>
-      <p className="fine">Asking prices from Google Shopping. The payment is this offer’s rate, term, tax, fees, and down payment.</p>
+      <p className="fine">Asking prices from cars for sale near this ZIP. The payment is this offer’s rate, term, tax, fees, and down payment.</p>
       <p className={note && market.snapshot?.sample === 'accepted' ? 'note strong' : 'note'}>{status}</p>
       <div className="zip-row">
         <label className="field">
